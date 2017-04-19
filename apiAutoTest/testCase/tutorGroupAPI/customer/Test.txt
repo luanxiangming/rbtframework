@@ -1,0 +1,75 @@
+*** Settings ***
+Test Setup        Setup
+Force Tags        tg    stop
+Resource          ../../../keyWords/tutorGroupAPI/customer/customer/Customer.txt
+Resource          ../../../framework/init.txt
+Resource          ../../../keyWords/dataOperation/DataOperation.txt
+
+*** Test Cases ***
+CustomerTestSuccess01_TutorabcBrand为vipabc且已完成新手检测
+    [Tags]    high
+    tg_test    vipabc    &{V_email}[year001_sn]
+    assertEqualValueByJsonNested    Result    IsDcgsTestComplete    True
+    assertEqualValueByJsonNested    Result    IsLevelTestComplete    True
+    assertEqualValueByJsonNested    Result    IsFirstTestComplete    True
+
+CustomerTestSuccess02_TutorabcBrand为tutorabc且已完成新手检测
+    [Tags]    high
+    ${returnData}    tg_test    tutorabc    &{T_email}[year001_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    True
+
+CustomerTestSuccess03_TutorabcBrand为Japan且已完成新手检测
+    [Tags]    high
+    ${returnData}    tg_test    japan    &{Vjp_email}[year001_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    True
+
+CustomerTestSuccess04_TutorabcBrand为tutorabcJr且已完成新手检测
+    [Tags]    high
+    ${returnData}    tg_test    tutorabcjr    &{Tjr_email}[year001_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    True
+
+CustomerTestSuccess05_TutorabcBrand为VipabcJr且已完成新手检测
+    [Tags]    high
+    ${returnData}    tg_test    vipabcjr    &{Vjr_email}[year001_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    True
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    True
+
+CustomerTestFail01_TutorabcBrand为vipabc且未做新手检测
+    [Tags]    high
+    ${returnData}    tg_test    vipabc    &{V_email}[year018_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    False
+
+CustomerTestFail02_clientSn不存在
+    [Tags]    low
+    ${returnData}    tg_test    vipabc    9999999
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    False
+
+CustomerTestFail03_TutorBrand为非法值
+    [Tags]    low
+    ${returnData}    tg_test    wrongBrand    &{V_email}[year001_sn]
+    assertEqualValueByJson    ${returnData}    ReturnCode    ParameterError
+
+CustomerTestFail04_tutorbrand和clientsn不匹配
+    [Tags]    low    ${EMPTY}
+    ${returnData}    tg_test    vipabcjr    &{V_email}[year001_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    False
+
+CustomerTestFail05_TutorabcBrand为vipabc且环境检测测试未通过且未约测
+    [Tags]    low
+    ${returnData}    tg_test    vipabc    &{V_email}[year018_sn]
+    assertEqualValueByJsonNested    ${returnData}    Result    IsDcgsTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsLevelTestComplete    False
+    assertEqualValueByJsonNested    ${returnData}    Result    IsFirstTestComplete    False

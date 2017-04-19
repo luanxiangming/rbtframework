@@ -1,0 +1,50 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg    product
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/Get.txt
+Resource          ../../../../../framework/init.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/Materials.txt
+
+*** Test Cases ***
+Class_Material_Data_Profile_Get_01_1_001
+    [Documentation]    传入指定3组大人的教材编号，2組存在，1組不存在
+    [Tags]    high
+    [Template]    GetMaterial_Template
+    #TutorBrand     Table
+    #3组大人教材编号，2組存在，1組不存在
+    vipabc    material    1
+
+Class_Material_Data_Profile_Get_02_1_001
+    [Documentation]    传入指定3组小孩的教材编号，2組存在，1組不存在
+    [Tags]    high
+    [Template]    GetMaterial_Template
+    #3组小孩的教材编号，2組存在，1組不存在
+    vipabcjr    lesson_plan_Temp    2
+
+Class_Material_Data_Profile_Get_03_1_001
+    [Documentation]    传入指定2组不存在的教材编号（vipabc）
+    [Tags]    high
+    log    传入指定2组不存在的教材编号（vipabc）
+    ${TutorBrand}    Set Variable    vipabc
+    #获取两笔教材编号
+    ${MaterialSn1}    Set Variable    10000000
+    ${MaterialSn2}    Set Variable    20000000
+    Get    ${TutorBrand}    ${MaterialSn1},${MaterialSn2}
+    ${Success}    JsonUtil    Success
+    assertsOperation    ${Success}    =    true
+    ${num}    JsonLength    Result    2
+    Should be true    ${num}==0
+
+Class_Material_Data_Profile_Get_03_1_002
+    [Documentation]    传入指定2组不存在的教材编号(vipabcJr)
+    [Tags]    high
+    log    传入指定2组不存在的教材编号(vipabcJr)
+    ${TutorBrand}    Set Variable    vipabcjr
+    #获取两笔教材编号
+    ${MaterialSn1}    Set Variable    10000000
+    ${MaterialSn2}    Set Variable    20000000
+    Get    ${TutorBrand}    ${MaterialSn1},${MaterialSn2}
+    ${Success}    JsonUtil    Success
+    assertsOperation    ${Success}    =    true
+    ${num}    JsonLength    Result    2
+    Should be true    ${num}==0

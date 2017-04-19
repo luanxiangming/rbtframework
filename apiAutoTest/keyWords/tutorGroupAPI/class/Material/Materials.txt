@@ -1,0 +1,26 @@
+*** Keywords ***
+Materials
+    [Arguments]    ${MaterialsSn}
+    ${uri}    Set Variable    /class/Material/Materials
+    ${params}    Set Variable    Token=${token}&Query={MaterialSn:[${MaterialsSn}]}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+GetMaterials
+    [Arguments]    ${TutorBrand}=
+    #Create Session    api    http://devapitw.tutorabc.com/TutorGroup.Api
+    ${uri}    Set Variable    /class/Material/Data/Profile/Get
+    ${params}    Set Variable    Token=${Token}&Query={"TutorBrand":"${TutorBrand}","Count":5}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${returnData}    Set Variable    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+    [Return]    ${returnData}
+
+GetMaterial
+    [Arguments]    ${TutorBrand}=    ${index}=0
+    [Documentation]    \#取指定MaterialSn
+    GetMaterials    ${TutorBrand}
+    ${returnData}    JsonUtilTwo    Result    MaterialSn    ${index}
+    [Return]    ${returnData}

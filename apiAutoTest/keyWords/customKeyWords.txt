@@ -1,0 +1,33 @@
+*** Settings ***
+
+*** Variables ***
+
+*** Keywords ***
+login14
+    [Arguments]    ${account}    ${password}
+    [Tags]    apitest
+    #${headers}    create Dictionary    Content-Type=application/x-www-form-urlencoded
+    Create Session    api    http://stage.vipabc.com    ${headers}[0]
+    ${uri}    Set Variable    /Home/Login
+    ${params}    Create Dictionary    txt_login_account=${account}    pwd_login_password=${password}
+    ${resp}    Post Request    api    ${uri}    ${params}    ${headers}
+    log    打印日志content:${resp.content}
+    log    打印日志headers:${resp.headers}
+    log    打印日志cookie:${resp.cookies}
+    Should Contain    ${resp.content}    OK
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+login24
+    [Arguments]    ${account}    ${password}
+    [Tags]    apitest
+    #${headers}    createDictionary    Content-Type=application/x-www-form-urlencoded
+    #Create Session    api    http://stage.vipabc.com    ${headers}
+    ${uri}    Set Variable    /program/member/member_login_exe.asp
+    ${uri}    set variable
+    ${params}    Create Dictionary    txt_login_account=${account}    pwd_login_password=${password}
+    ${resp}    get request    api    ${uri}    ${headers}    ${params}
+    log    打印日志content:${resp.content}
+    log    打印日志headers:${resp.headers}
+    log    打印日志cookie:${resp.cookies}
+    #Should Contain    ${resp.content}    OK
+    Should Be Equal As Strings    ${resp.status_code}    200

@@ -1,0 +1,72 @@
+*** Settings ***
+Suite Setup       Setup
+Suite Teardown    Teardown
+Test Setup
+Resource          ../../framework/init.txt
+
+*** Test Cases ***
+loginTest
+    [Documentation]    登录成功
+    [Template]
+    ${result}    login    &{email}[year001]    &{password}[pwd1]
+    assertContainValues    ${result}
+
+cancelSessionTest
+    login    &{email}[year001]    &{password}[pwd1]
+    ${clientSessionStart}    queryReservation
+    CancelReservation    2016/11/09 23:30:00    99
+    ${clientSessionEnd}    queryReservation
+    ${clientSessionFinal}    Evaluate    ${clientSessionStart}+1
+    Run Keyword If    ${clientSessionEnd}==${clientSessionFinal}    log    成功取消订课
+    ...    ELSE    log    取消订课失败
+
+cancel1on1Test
+    login    &{email}[year001]    &{password}[pwd1]
+    ${clientSessionStart}    queryReservation
+    CancelReservationByJson    7    2016/11/11 00:30:00
+    ${clientSessionEnd}    queryReservation
+    ${clientSessionFinal}    Evaluate    ${clientSessionStart}+4
+    Run Keyword If    ${clientSessionEnd}==${clientSessionFinal}    log    成功取消订课
+    ...    ELSE    log    取消订课失败
+
+queryWordBankTest
+    [Tags]    apitest
+    login    &{email}[year001]    &{password}[pwd1]
+    ${returnData}    getWordBank
+    assertContainValues    ${returnData}    microwave    destination    inconvenience
+
+setReservationTest
+    login    &{email}[year001]    &{password}[pwd1]
+    ${clientSessionStart}    queryReservation
+    ${returnData}    setReservation    99    2016/11/09 23:30:00    96156
+    #assertContainValues    ${returnData}    false    同时段已预订其他课程
+    #assertEqualValueByJsonArray    ${returnData}    Message    同时段已预订其他课程
+    ${clientSessionEnd}    queryReservation
+    ${clientSessionFinal}    Evaluate    ${clientSessionStart}-1
+    #log    after: ${clientSessionFinal}
+    Run Keyword If    ${clientSessionEnd}==${clientSessionFinal}    log    成功订课
+    ...    ELSE    log    订课失败
+
+queryReservationTest
+    login    &{email}[year001]    &{password}[pwd1]
+    queryReservationInformation
+
+setReservationQuicklySessionTest
+    login3    freezhang@vipabc.com    1qazxsw2
+    reservationQuicklySession    3    0    93586    false
+
+cancelReservationQuicklySessionTest
+    login3    freezhang@vipabc.com    1qazxsw2
+    reservationQuicklySession    3    1    93586    false
+
+queryLobbySessionTest
+    login    &{email}[year001]    &{password}[pwd1]
+    queryLobbySession    LobbyClass    False    10/31/2016 00:00:00
+
+testxmlTest
+    testxml
+
+testConMsSql
+    #assertDataEquals    2598462
+    @{data}    get_client_basic    2598462
+    log    @{data}[0]

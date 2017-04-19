@@ -1,0 +1,210 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg    stop
+Resource          ../../../../../keyWords/tutorGroupAPI/class/reservation/Reserve.txt
+Resource          ../../../../../framework/init.txt
+Resource          ../../../../../keyWords/reservation/SetReservation.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Lobby/Lobbysessions.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/reservation/BookingRecords.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/reservation/cancel.txt
+
+*** Test Cases ***
+ReserveSuccess01_yearContract1on1非新手
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    SessionTime=${returnData}    Max=1    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess02_yearContract1on1新手
+    [Tags]    high
+    ${returnData}    TimeUtil    5
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year006_sn]    SessionTime=${returnData}    Max=1    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess03_yearContract1on2新手
+    [Tags]    high
+    ${returnData}    TimeUtil    5
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year006_sn]    SessionTime=${returnData}    Max=2    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess04_yearContract1on2非新手
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    SessionTime=${returnData}    Max=2    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess05_yearContract1on3新手
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year006_sn]    SessionTime=${returnData}    Max=3    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess06_yearContract1on3非新手
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    SessionTime=${returnData}    Max=3    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess07_yearContract1on6新手
+    [Tags]    high
+    ${returnData}    TimeUtil    5
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year006_sn]    SessionTime=${returnData}    Max=6    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess08_yearContract1on6非新手(4-12)
+    [Tags]    high
+    ${returnData}    TimeUtil    5
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    SessionTime=${returnData}    Max=6    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess09_yearContract大讲堂
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserverSuccess10_yearContract随选快课10分钟
+    [Tags]    high    online
+    ${LobbySn}    lobbySessions    Abc    10
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserverSuccess11_yearContract随选快课20分钟
+    [Tags]    high    online
+    ${LobbySn}    lobbySessions    Abc    20
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[year003_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess12_SuperContract加购1on1非新手
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[super004_sn]    SessionTime=${returnData}    Max=6    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess13_SuperContract大讲堂
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[super004_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess14_SuperContract小班课非新手
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[super004_sn]    SessionTime=${returnData}    Max=6    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess15_SuperContract小班课立马上非新手
+    [Documentation]    暂时假设每次临订的小班课没排满，后续版本再完善。
+    [Tags]    high    online
+    ${returnData}    TimeLdUtil    5
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[super004_sn]    SessionTime=${returnData}    Max=6    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnData2}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+
+ReserveSuccess16_DayContract先订大讲堂再订小班课
+    [Documentation]    每次跑完必须得取消订课
+    [Tags]    high
+    ${LobbySn}    lobbySessionsTwo    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[day005_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${returnTime}    TimeUtil    25
+    ${params2}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[day005_sn]    SessionTime=${returnTime}    Max=6    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    reserve    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+ReserveSuccess17_DayContract先订小班课再订大讲堂
+    [Documentation]    每次跑完必须得取消订课
+    [Tags]    high
+    ${returnData}    TimeUtil    25
+    ${params}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[day005_sn]    SessionTime=${returnData}    Max=6    IsTestMode=false
+    ${params_list}    Create List    ${params}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${LobbySn}    lobbySessionsTwo    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=Japan    ClientSn=&{Vjp_email}[day005_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list2}    Create List    ${params1}
+    ${returnData2}    reserve    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True

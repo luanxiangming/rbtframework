@@ -1,0 +1,10 @@
+Tags说明:
+TutorGroupAPI:tg
+用例等级：high，middle，low
+需连接数据库的用例：db
+待调试的用例：fail
+仅正式机执行：product
+仅stage机执行：stage
+需手动执行：manual
+暂时不处理：stop
+调试专用：debug

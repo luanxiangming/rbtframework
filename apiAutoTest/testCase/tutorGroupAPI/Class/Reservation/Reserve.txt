@@ -1,0 +1,498 @@
+*** Settings ***
+Suite Setup       Setup
+Suite Teardown    Teardown
+Force Tags        tg    product
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/Get.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/GetInfo.txt
+Resource          ../../../../framework/init.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/reservation/Reserve.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/reservation/cancel.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/reservation/cancel.txt
+
+*** Test Cases ***
+Class_Reservation_Reserve01_1_001
+    [Documentation]    大人年约订11分钟后的45分讲堂课程
+    [Template]    ReserveAdult45_Template
+    #TutorBrand    ClientSn
+    #tutorabc
+    1    &{T_email}[year002_sn]
+    #vipabcx
+    2    &{V_email}[year025_sn]
+    #vipabcJP
+    8    &{Vjp_email}[year003_sn]
+    [Teardown]
+
+Class_Reservation_Reserve01_1_002
+    [Documentation]    tjr年约订11分钟后的45分讲堂课程
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    2,3    45    1
+    #开始订课
+    ${TutorBrand}    Set Variable    3
+    ${ClientSn}    Set Variable    &{Tjr_email}[year002_sn]
+    reserve    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    ${t}    get api response
+    ${t}    decode    ${t}
+    log    ${t}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    ${ApiConsultantSn}    Set Variable    ${Result[0]['ConsultantSn']}
+    ${ApiMaterialSn}    Set Variable    ${Result[0]['MaterialSn']}
+    GetInfo    [${LobbySn}]
+    ${GetInfoSn}    get api response    Result,0,Sn
+    ${GetInfoStartTime}    get api response    Result,0,StartTime
+    ${GetInfoConsultantSn}    get api response    Result,0,ConsultantSn
+    ${GetInfoMaterialSn}    get api response    Result,0,MaterialSn
+    ${GetInfoJrMaterialSn}    get api response    Result,0,JrMaterialSn
+    #校验订课返回的信息和上方Lobby接口返回的讲堂信息是否一致
+    should be true    ${ApiMax}==-1
+    should be equal as strings    ${ApiSstNumber}    3
+    should be equal as strings    ${GetInfoStartTime}    "${ApiSessionTime}"
+    should be equal as strings    ${LobbySn}    ${ApiLobbySn}
+    should be equal as strings    ${GetInfoConsultantSn}    ${ApiConsultantSn}
+    should be equal as strings    ${GetInfoMaterialSn}    ${ApiMaterialSn}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10`
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #检查数据库
+    ${returnData}    queryDataSpecial    stype,scons,smaterial    ABCJR    customer_booking_record    client_sn = &{Tjr_email}[year002_sn] \ \ AND sdate = convert(datetime,'${attend_date}') AND stime = ${attend_sestime} AND special_sn = ${ApiLobbySn} AND valid = 1
+    ${DbNums}    Get Length    ${returnData}
+    ${GetInfoJrMaterialSn}    run keyword if    '${GetInfoJrMaterialSn}'=='null'    Set Variable    None
+    ...    ELSE    Evaluate    ${GetInfoJrMaterialSn}+800000
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    3
+    should be equal as strings    ${returnData[0][1]}    ${GetInfoConsultantSn}
+    should be equal as strings    ${returnData[0][2]}    ${GetInfoJrMaterialSn}
+    #Cancel    ${params_list}
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+
+Class_Reservation_Reserve01_1_003
+    [Documentation]    vjr年约或超值订11分钟后的45分讲堂课程
+    [Template]    ReserveChiAdu45_Template
+    #TutorBrand    ClientSn    ClassTypeId    BrandId    LobbyBrand    SstNumber
+    4    &{Vjr_email}[year001_sn]    3    1    2,3    99    #vipabcjr年约
+    4    &{Vjr_email}[super002_sn]    16    1    2,3    23    #vipabcjr超值
+    2    &{V_email}[super003_sn]    10    2    1,3    23    #vipabc超值
+    1    &{T_email}[super003_sn]    10    2    1,3    23    #tutorabc超值
+    8    &{Vjp_email}[super004_sn]    10    2    1,3    23    #vipabcJp超值
+    3    &{Tjr_email}[super001_sn]    19    5    2,3    26    #tutorabcJr超值
+    [Teardown]
+
+Class_Reservation_Reserve01_1_004
+    [Documentation]    预订TutorGlass讲堂
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    1,3    45    7    Sn    0
+    ...    TutorGlassConsultantSn
+    #开始订课
+    ${TutorBrand}    Set Variable    2
+    ${ClientSn}    Set Variable    &{V_email}[super003_sn]
+    run keyword if    ${LobbySn}==0    Pass Execution    没有排课
+    reserve    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    ${ApiConsultantSn}    Set Variable    ${Result[0]['ConsultantSn']}
+    ${ApiMaterialSn}    Set Variable    ${Result[0]['MaterialSn']}
+    #根据教材编号获取讲堂信息
+    GetInfo    [${LobbySn}]
+    ${GetInfoSn}    get api response    Result,0,Sn
+    ${GetInfoStartTime}    get api response    Result,0,StartTime
+    ${GetInfoConsultantSn}    get api response    Result,0,ConsultantSn
+    ${GetInfoMaterialSn}    get api response    Result,0,MaterialSn
+    #校验订课返回的信息和上方Lobby接口返回的讲堂信息是否一致
+    should be true    ${ApiMax}==-1
+    should be equal as strings    ${ApiSstNumber}    96
+    should be equal as strings    ${GetInfoStartTime}    "${ApiSessionTime}"
+    should be equal as strings    ${LobbySn}    ${ApiLobbySn}
+    should be equal as strings    ${GetInfoConsultantSn}    ${ApiConsultantSn}
+    should be equal as strings    ${GetInfoMaterialSn}    ${ApiMaterialSn}
+    [Teardown]    Cancel    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+
+Class_Reservation_Reserve01_2_005
+    [Documentation]    预订5分钟内开课的45分讲堂课程
+    [Tags]    debug    wait
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    1,3    45    1    Sn    0
+    ${ApiStartTime_list}    get api response    Result,all,StartTime
+    ${StartTime}    Set Variable    ${ApiStartTime_list[0]}
+    ${NowTime}    get time
+    #等待至开课前4分钟
+    ${t1}    add_time_to_date    ${StartTime}    -4 m
+    ${t2}    Subtract date From date    ${t1}    ${NowTime}
+    sleep    ${t2}
+    reserve    2    &{V_email}[year025_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.206.01"
+
+Class_Reservation_Reserve01_2_006
+    [Documentation]    预订不存在的讲堂
+    [Tags]
+    #获取LobbySn
+    ${LobbySn}    Set Variable    900000000
+    ${NowTime}    get time
+    ${SessionTime}    Add Time To Date    ${NowTime}    1 days
+    reserve    2    &{V_email}[year025_sn]    ${LobbySn}    \    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.202.01"
+
+Class_Reservation_Reserve01_2_007
+    [Documentation]    预订与指定讲堂不一致的课时
+    [Tags]
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    1,3    45    1    Sn    1
+    ${ApiStartTime_list}    get api response    Result,all,StartTime
+    ${StartTime}    Set Variable    ${ApiStartTime_list[0]}
+    ${SessionTime}    Add Time To Date    ${StartTime}    1 days
+    reserve    2    &{V_email}[year025_sn]    ${LobbySn}    \    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.202.02"
+
+Class_Reservation_Reserve01_2_008
+    [Documentation]    预订不适用的讲堂品牌
+    [Tags]
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    1    45    5
+    reserve    4    &{Vjr_email}[year001_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.202.03"
+
+Class_Reservation_Reserve01_2_009
+    [Documentation]    不适用于TutorGlass合同预订TutorGlass讲堂    #获取LobbySn    LobbyBrand    PeriodMinutes    TutorBrand    Days    Needs    # Index    #${LobbySn}    GetOlySn    [2,3]    [45]    4    1    Sn    # 1    奥数    TopicZhCn
+    ${LobbySn}    GetLobbysn    1,3    45    7    Sn    0
+    ...    TutorGlassConsultantSn
+    run keyword if    ${LobbySn}==0    Pass Execution    没有排课
+    reserve    4    &{Vjr_email}[olym006_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.205.01"
+
+Class_Reservation_Reserve02_1_001
+    [Documentation]    订11分钟后的随选快课
+    [Tags]
+    [Template]    ReserveSoon_Template    #TutorBrand | ClientSn | PeriodMinutes | ClassTypeId | | BrandId | ClassIntervalId | SstNumbe | # LobbyBrand
+    #vipabc年约订20分钟快课
+    2    &{V_email}[year025_sn]    20    22    2    3    97
+    ...    1,3
+    #tutorabc年约订20分钟快课
+    1    &{T_email}[year002_sn]    20    22    2    3    97
+    ...    1,3
+    #vipabcJp年约订20分钟快课
+    8    &{Vjp_email}[year003_sn]    20    22    2    3    97
+    ...    1,3
+    #vipabcJr年约订20分钟快课
+    4    &{Vjr_email}[year001_sn]    20    24    1    3    97
+    ...    2,3
+    #tutorabcJr年约订20分钟快课
+    3    &{Tjr_email}[year002_sn]    20    26    5    3    97
+    ...    2,3
+    #vipabcJp年约订10分钟快课
+    8    &{Vjp_email}[year003_sn]    10    23    2    2    98
+    ...    1,3
+    #vipabcJr年约订10分钟快课
+    4    &{Vjr_email}[year001_sn]    10    25    1    2    98
+    ...    2,3
+    #vipabc年约订10分钟快课
+    2    &{V_email}[year025_sn]    10    23    2    2    98
+    ...    1,3
+    #tutorabc年约订10分钟快课
+    1    &{T_email}[year002_sn]    10    23    2    2    98
+    ...    1,3
+    #tutorabcJr年约订10分钟快课
+    3    &{Tjr_email}[year002_sn]    10    27    5    2    98
+    ...    2,3
+
+Class_Reservation_Reserve02_2_002
+    [Documentation]    预订不可预订的随选快课
+    [Template]
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    2,3    20    4    Sn    1
+    run keyword if    ${LobbySn}==0    Pass Execution    没有排课
+    #开始订课
+    reserve    4    &{Vjr_email}[super002_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.205.01"
+
+Class_Reservation_Reserve03_1_001
+    [Documentation]    大人年约提前预订小班课程(Max)+超值（1对1）
+    [Tags]
+    [Template]    ReserveRegularByMax_Template
+    #TutorBrand    ClientSn    Max    PeriodMinutes    SstNumber
+    #vipabc年约
+    2    &{V_email}[year025_sn]    1    45    7
+    2    &{V_email}[year025_sn]    2    45    2
+    2    &{V_email}[year025_sn]    3    45    4
+    2    &{V_email}[year025_sn]    6    45    6
+    2    &{V_email}[year028_sn]    4    45    14
+    #vipabc超值
+    2    &{V_email}[super003_sn]    1    45    7
+    #tutorabc年约
+    1    &{T_email}[year002_sn]    1    45    7
+    1    &{T_email}[year002_sn]    2    45    2
+    1    &{T_email}[year002_sn]    3    45    3
+    1    &{T_email}[year002_sn]    6    45    4
+    #tutorabc超值
+    1    &{T_email}[super003_sn]    1    45    7
+    #vipabcJp年约
+    8    &{Vjp_email}[year003_sn]    1    45    7
+    8    &{Vjp_email}[year003_sn]    2    45    2
+    8    &{Vjp_email}[year003_sn]    3    45    4
+    8    &{Vjp_email}[year003_sn]    6    45    6
+    #vipabcJp超值
+    #8    &{Vjp_email}[super004_sn]    1    45    7    #暂缺相关帐号资料
+
+Class_Reservation_Reserve03_1_002
+    [Documentation]    tjr年约提前预订小班课程(Max)+超值1对1
+    [Template]    ReserveRegularTjrByMax_Template
+    #TutorBrand    ClientSn    Max    PeriodMinutes    SstNumber
+    #年约
+    3    &{Tjr_email}[year002_sn]    1    45    1
+    3    &{Tjr_email}[year002_sn]    2    45    4
+    3    &{Tjr_email}[year002_sn]    3    45    5
+    3    &{Tjr_email}[year002_sn]    6    45    2
+    #超值1对1
+    3    &{Tjr_email}[super001_sn]    1    45    1
+
+Class_Reservation_Reserve03_1_003
+    [Documentation]    vjr年约或超值提前预订小班课程(Max)
+    [Template]    ReserveRegularVjrAduByMax_Template
+    #TutorBrand    ClientSn    Max    PeriodMinutes    SstNumber    ClassTypeId    BrandId
+    #Vjr年约
+    4    &{Vjr_email}[year001_sn]    1    45    7    1    1
+    4    &{Vjr_email}[year001_sn]    2    45    2    4    1
+    4    &{Vjr_email}[year001_sn]    3    45    4    5    1
+    4    &{Vjr_email}[year001_sn]    6    45    6    2    1
+    #Vjr超值
+    4    &{Vjr_email}[super002_sn]    1    45    7    1    1
+    4    &{Vjr_email}[super002_sn]    6    45    21    17    1
+    #vipabc超值
+    2    &{V_email}[super003_sn]    6    45    21    13    4
+    #tutorabc超值
+    1    &{T_email}[super003_sn]    6    45    21    13    4
+    #vipabcJp超值
+    8    &{Vjp_email}[super004_sn]    6    45    21    13    4
+    #tutorabcJr超值
+    3    &{Tjr_email}[super001_sn]    6    45    25    20    5
+
+Class_Reservation_Reserve03_1_004
+    [Documentation]    大人年约提前预订小班课程(Max)+超值（1对1）
+    [Tags]
+    [Template]    ReserveRegularBySstNumber_Template
+    #TutorBrand    ClientSn    Max    PeriodMinutes    SstNumber
+    #vipabc年约
+    2    &{V_email}[year025_sn]    1    45    7
+    2    &{V_email}[year025_sn]    2    45    2
+    2    &{V_email}[year025_sn]    3    45    4
+    2    &{V_email}[year025_sn]    6    45    6
+    2    &{V_email}[year028_sn]    4    45    14
+    #vipabc超值
+    2    &{V_email}[super003_sn]    1    45    7
+    #tutorabc年约
+    1    &{T_email}[year002_sn]    1    45    7
+    1    &{T_email}[year002_sn]    2    45    2
+    1    &{T_email}[year002_sn]    3    45    3
+    1    &{T_email}[year002_sn]    6    45    4
+    #tutorabc超值
+    #1    &{T_email}[super003_sn]    1    45    7    #暂缺相关帐号资料
+    #vipabcJp年约
+    8    &{Vjp_email}[year003_sn]    1    45    7
+    8    &{Vjp_email}[year003_sn]    2    45    2
+    8    &{Vjp_email}[year003_sn]    3    45    4
+    8    &{Vjp_email}[year003_sn]    6    45    6
+    #vipabcJp超值
+    #8    &{Vjp_email}[super004_sn]    1    45    7    #暂缺相关帐号资料
+
+Class_Reservation_Reserve03_1_005
+    [Documentation]    tjr年约提前预订小班课程(Max)+超值1对1
+    [Template]    ReserveRegularTjrBySstNumber_Template
+    #TutorBrand    ClientSn    Max    PeriodMinutes    SstNumber
+    #年约
+    3    &{Tjr_email}[year002_sn]    1    45    1
+    3    &{Tjr_email}[year002_sn]    2    45    4
+    3    &{Tjr_email}[year002_sn]    3    45    5
+    3    &{Tjr_email}[year002_sn]    6    45    2
+    #超值1对1
+    3    &{Tjr_email}[super001_sn]    1    45    1
+
+Class_Reservation_Reserve03_1_006
+    [Documentation]    vjr年约或超值提前预订小班课程(SstNumber)
+    [Template]    ReserveRegularVjrAduBySstNumber_Template
+    #TutorBrand    ClientSn    Max    PeriodMinutes    SstNumber    ClassTypeId    BrandId
+    #Vjr年约
+    4    &{Vjr_email}[year001_sn]    1    45    7    1    1
+    4    &{Vjr_email}[year001_sn]    2    45    2    4    1
+    4    &{Vjr_email}[year001_sn]    3    45    4    5    1
+    4    &{Vjr_email}[year001_sn]    6    45    6    2    1
+    #Vjr超值
+    4    &{Vjr_email}[super002_sn]    1    45    7    1    1
+    4    &{Vjr_email}[super002_sn]    6    45    21    17    1
+    #vipabc超值
+    2    &{V_email}[super003_sn]    6    45    21    13    4
+    #tutorabc超值
+    1    &{T_email}[super003_sn]    6    45    21    13    4
+    #vipabcJp超值
+    8    &{Vjp_email}[super004_sn]    6    45    21    13    4
+    #tutorabcJr超值
+    3    &{Tjr_email}[super001_sn]    6    45    25    20    5
+
+Class_Reservation_Reserve03_1_007
+    [Documentation]    Special 1on1 策略訂課
+    [Template]    ReserveSpecial1on1_Template
+    #TutorBrand    ClientSn    Max    StrategyId
+    #vipabc
+    2    &{V_email}[year025_sn]    1    REG-30
+    2    &{V_email}[year025_sn]    1    REG-45
+    #vipabcJr
+    4    &{Vjr_email}[year001_sn]    1    REG-30
+    4    &{Vjr_email}[year001_sn]    1    REG-45
+    #tutoracJr
+    3    &{Tjr_email}[year002_sn]    1    REG-30
+    3    &{Tjr_email}[year002_sn]    1    REG-45
+
+Class_Reservation_Reserve03_1_008
+    [Documentation]    系统维护期间的预订
+    [Tags]
+    [Template]
+    #插入系统维护时段，Hdate代表3点的时段不可订课，指定为当前日期后2天的凌晨3:30，例如测试运行当前是11/30，就带入12/2 3:30:00
+    alterData    muchnewdb    INSERT INTO company_calendar \ \ \ \ (Sn, HDate, Holiday_C, Holiday_E, [Block], Inputer, Inp_Date, Valid) VALUES \ \ \ \ ((SELECT MAX(Sn) + 1 AS NewSn FROM company_calendar), \ \ \ \ \ DATEADD(DAY, 2, CONVERT(DATE, GETDATE())), \ \ \ \ \ 'TemporaryForAutoTest', \ \ \ \ \ 'TemporaryForAutoTest', \ \ \ \ \ ', 3,', \ \ \ \ \ 275, \ \ \ \ \ GETDATE(), \ \ \ \ \ 1)
+    ${returnData}    queryDataSpecial    top 1 convert(varchar,Hdate,120)    muchnewdb    company_calendar    Holiday_E = 'TemporaryForAutoTest' order by Sn
+    ${HDate}    set variable    ${returnData[0][0]}
+    ${SessionDay}    Get Substring    ${HDate}    0    11
+    ${SessionTime}    set variable    ${SessionDay} 03:30:00
+    #预订vipabc_年约
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    \    1    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.203.01"
+    #清除数据 TearDown
+    [Teardown]    alterData    muchnewdb    DELETE FROM company_calendar WHERE Holiday_E = 'TemporaryForAutoTest'
+
+Class_Reservation_Reserve03_1_009
+    [Documentation]    客户无合同的预订
+    [Tags]
+    [Template]
+    ${SessionTime}    TimeUtil    26
+    #预订vipabc_年约
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[year015_sn]    \    1    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.201.01"
+    [Teardown]
+
+Class_Reservation_Reserve03_1_010
+    [Documentation]    超过合同服务期间的预订
+    [Tags]
+    [Template]
+    ${SessionTime}    TimeUtil    -800
+    #预订vipabc_年约
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    \    6    \    2016-11-01 04:30:00
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.201.02"
+    [Teardown]
+
+Class_Reservation_Reserve03_1_011
+    [Documentation]    预订不可预订的小班課程
+    ...    參數：TutorBrand、ClientSn、Max、SessionTime
+    [Tags]
+    [Template]    ReserveInValid_Template
+    #预订vipabc_年约_预定1对5
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    5
+    #Vjr年约预定1对4
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    4
+    #Tjr年约预定30分钟课程
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    1    \    30
+    #预订vipabc_超值_预定1对5
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    5
+    #Vjr超值预定1对2
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    2
+    #Tjr超值预定30分钟课程
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    1    \    30
+    [Teardown]
+
+Class_Reservation_Reserve03_1_012
+    [Documentation]    预订不可预订的小班課程
+    ...    參數：TutorBrand、ClientSn、SstNumber、SessionTime
+    [Tags]
+    [Template]    ReserveInValid_Template
+    #预订vipabc_年约_预定sstNumber=1
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    \    1    45
+    #Vjr年约预定sstNumber=7
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    \    14    45
+    #Tjr年约预定30分钟课程
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    \    1    30
+    #预订vipabc_超值_预定30分钟
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    \    99    30
+    #Vjr超值预定sstNumber=6
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    \    6    45
+    #Tjr超值预定30分钟课程
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    \    1    30
+    [Teardown]
+
+Class_Reservation_Reserve03_1_013
+    [Documentation]    每日一课合同预订当天第二堂课
+    ...    參數：TutorBrand、ClientSn、Max、SessionTime
+    [Tags]
+    [Template]
+    #预订vipabc_年约_预定sstNumber=1
+    ${SessionTime1}    timeUtil    26
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[day021_sn]    \    6    \    ${SessionTime1}
+    ${SessionTime2}    timeUtil    28
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[day021_sn]    \    6    \    ${SessionTime2}
+    ${r1}    get api response
+    ${r1}    to json    ${r1}
+    ${SessionTime3}    timeUtil    29
+    #对跨天的情况作处理
+    run keyword if    '${r1[0]['Success']}'=='True'    run keywords    reserve    &{TutorBrand}[vipabc]    &{V_email}[day021_sn]    ${EMPTY}
+    ...    6    \    ${SessionTime3}
+    ...    AND    assertEqualValueByJsonArray    Success    false
+    ...    AND    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.205.02"
+    ...    ELSE    run keywords    assertEqualValueByJsonArray    Success    false
+    ...    AND    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.205.02"
+    ...    AND    log    无法预定第二堂课
+    [Teardown]    Run Keywords    cancelSuccess    &{TutorBrand}[vipabc]    &{V_email}[day021_sn]    \    ${SessionTime1}
+    ...    AND    cancel    &{TutorBrand}[vipabc]    &{V_email}[day021_sn]    \    ${SessionTime2}
+    ...    AND    cancel    &{TutorBrand}[vipabc]    &{V_email}[day021_sn]    \    ${SessionTime3}
+
+Class_Reservation_Reserve03_1_014
+    [Documentation]    同时段的课程预订
+    ...    TutorBrand、ClientSn、Max、SessionTime
+    [Tags]
+    [Template]
+    #预订vipabc_年约_预定sstNumber=1
+    ${TutorBrand}    set variable    &{TutorBrand}[vipabc]
+    ${ClientSn}    set variable    &{V_email}[year025_sn]
+    ${SessionTime}    timeUtil    26
+    reserve    ${TutorBrand}    ${ClientSn}    \    6    \    ${SessionTime}
+    reserve    ${TutorBrand}    ${ClientSn}    \    6    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.200.01"
+    [Teardown]    cancel    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+Class_Reservation_Reserve03_1_015
+    [Documentation]    预订超过可预订时间的小班课程
+    ...    TutorBrand、ClientSn、Max、SessionTime
+    [Tags]
+    [Template]    ReserveOverTime_Template
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    6
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    1
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    2
+    #vipabc超值
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    1
+    #vipabcjr超值
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    1
+    #tutorabcJr超值
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    1
+    [Teardown]

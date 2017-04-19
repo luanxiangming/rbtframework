@@ -1,0 +1,208 @@
+*** Settings ***
+Library           Collections
+Library           String
+Library           json
+Resource          Utils.txt
+
+*** Keywords ***
+assertContainValues
+    [Arguments]    @{value}
+    ${api_rsponse}    get api response
+    ${content}    Convert to string    ${api_rsponse.content}
+    : FOR    ${value}    IN    @{value}
+    \    Should Contain    ${content}    ${value}
+
+assertEqualValueByJsonArray
+    [Arguments]    ${arg}    ${value}
+    ${api_rsponse}    get api response
+    log    ${api_rsponse}
+    ${data}    To Json    ${api_rsponse}
+    ${msg}    set variable    ${data[0]['${arg}']}
+    ${msg}    dumps    ${msg}
+    should be equal as strings    ${msg}    ${value}
+
+assertEqualValueByJson
+    [Arguments]    ${arg}    ${value}
+    ${api_rsponse}    get api response
+    #${content_decode}    Replace String    ${api_rsponse.content}    \r\n    ${EMPTY}
+    #${content_decode}    decode    ${content_decode}
+    ${data}    To Json    ${api_rsponse}
+    ${msg}    set variable    ${data['${arg}']}
+    ${msg}    dumps    ${msg}
+    should be equal as strings    ${msg}    ${value}
+
+assertEqualValueByJsonNested
+    [Arguments]    ${arg}    ${arg_Nested}    ${value}
+    ${api_rsponse}    get api response
+    ${content_decode}    decode    ${api_rsponse.content}
+    ${data}    To Json    ${content_decode}
+    ${msg}    set variable    ${data['${arg}']}
+    #${result}    To Json    ${msg}
+    should be equal as strings    ${value}    ${msg['${arg_Nested}']}
+    #should be equal as strings    ${value}    ${result['${arg_Nested}']}
+
+assertContainValusByJson
+    [Arguments]    ${arg}    ${value}
+    ${api_rsponse}    get api response
+    ${content_decode}    decode    ${api_rsponse.content}
+    ${content}    To Json    ${content_decode}
+    ${msg}    set variable    ${data['${arg}']}
+    should contain    ${msg}    ${value}
+
+assertEqualValueByJsonArrayNested
+    [Arguments]    ${arg}    ${arg_Nested}    ${value}    ${index}=0    ${false}=true
+    [Documentation]    查询嵌套Json是数组的情况，index默认为0,${false}为not equals的情况
+    ...    eg：
+    ...    {"Success":true,"Result":[{"TutorBrand":2,"ClientSn":2598462},{"TutorBrand":2,"ClientSn":2598463}]}
+    ${api_rsponse}    get api response
+    ${content_decode}    decode    ${api_rsponse.content}
+    ${data}    To Json    ${content_decode}
+    ${msg}    set variable    ${data['${arg}'][${index}]}
+    #${result}    To Json    ${msg}
+    run keyword if    '${false}'=='true'    should be equal as strings    ${value}    ${msg['${arg_Nested}']}
+    ...    ELSE    Should Not Be Equal    ${value}    ${msg['${arg_Nested}']}
+
+asserttest
+    [Documentation]    LobbySn\":(),
+    ${api_rsponse}    get api response
+    ${content}    Convert to string    ${api_rsponse.content}
+    log    ::${content}
+    #${content1}    Get Regexp Matches    ${content}    \"LobbySn\"\:(.....)    1
+    ${content1}    Get Regexp Matches    ${content}    \"LobbySn\"\:(\\d+),    1
+    #log    ${content1[0]}
+    ${returnData}    Set Variable    ${content1[0]}
+    [Return]    ${returnData}
+
+assertGetValuesByJsonArray
+    [Arguments]    ${arg}
+    ${api_rsponse}    get api response
+    ${content_decode}    decode    ${api_rsponse.content}
+    ${data}    To Json    ${content_decode}
+    ${returnResult}    set variable    ${data[0]['${arg}']}
+    ${returnData}    set variable    ${returnResult['SessionTime']}
+    #${returnData}    set variable    ${returnResult['SessionFinishTime']}
+    log    ${returnData}
+    [Return]    ${returnData}
+
+assertJson
+    [Arguments]    ${arg}    ${arg_Nested}=None    ${operator}=    ${value}=None    ${IsArray}=false    ${index_for_Array}=0
+    [Documentation]    ${msg['${arg_Nested}']}
+    ${api_rsponse}    get api response
+    ${content_decode}    Replace String    ${api_rsponse}    \r\n    ${EMPTY}
+    #${content_decode}    decode    ${api_rsponse.content}
+    ${data}    To Json    ${content_decode}
+    #判断是否为数组
+    ${result}    Run keyword if    '${IsArray}'=='false'    set variable    ${data['${arg}']}
+    ...    ELSE    set variable    ${data[${index_for_Array}]['${arg}']}
+    #判断是否有嵌套
+    ${result}    Run keyword if    '${arg_Nested}'!='None'    set variable    ${result['${arg_Nested}']}
+    #根据运算符做判断
+    ${result}    dumps    ${result}
+    Run keyword if    '${operator}'=='='    should be equal as strings    ${result}    ${value}
+    ...    ELSE IF    '${operator}'=='contains'    Should Contain    ${result}    ${value}
+    ...    ELSE IF    '${operator}'=='!='    Should Be True    '${result}'!='${value}'    ${value}
+    ...    ELSE    Fatal Error    ${operator} \ is not valid Operation.should in（=|!=|contains）
+
+assertDB
+    [Arguments]    ${content}    ${value}
+    log    START_ASSERT_DB:${content}
+    Run keyword if    ${SERVER}    assertContainValues    ${content}    ${value}
+
+assertEqualValueByString
+    [Arguments]    ${arg}    ${value}    ${arg2}    ${value2}
+    ${api_rsponse}    get api response
+    ${conte_string}    Convert to string    ${api_rsponse.content}
+    ${data}    Get Regexp Matches    ${conte_string}    \"${arg}\"\:(\\w+),    1
+    ${msg}    set variable    ${data[0]}
+    should be equal as strings    ${msg}    ${value}
+    ${data2}    Get Regexp Matches    ${conte_string}    \"${arg2}\"\:(\\S+),    1
+    ${msg2}    set variable    ${data2[0]}
+    should be equal as strings    ${msg2}    ${value2}
+
+asserts
+    [Arguments]    ${arg}=    ${arg_Nested}=    ${operator}=    ${value}=    ${index}=0
+    ${api_rsponse}    get api response
+    ${r1}    JsonUtil    ${api_rsponse.content}    ${arg}    ${arg_Nested}    ${index}
+    Run keyword if    '${operator}'=='='    Should Be Equal As Strings    ${r1}    ${value}
+    ...    ELSE IF    '${operator}'=='!='    Should Be True    '${r1}'!='${value}'
+    ...    ELSE IF    '${operator}'=='contain' or '${operator}'=='Contain' or '${operator}'=='contains'    Should Contain    ${r1}    ${value}
+
+assertsOperation
+    [Arguments]    ${content}    ${operator}=    @{value}
+    [Documentation]    \#如果是等于或不等于则先转换成字符串，大于小于等情况不需要转换
+    log    KEYWORDNAME:assertsOperation
+    ${content_to_s}    Run keyword if    '${operator}'=='!=' or '${operator}'=='='    convert to string    ${content}
+    ...    ELSE    set variable    ${content}
+    #${content}    Replace String    ${content_to_s}    \r\n    ${EMPTY}
+    : FOR    ${value}    IN    @{value}
+    \    Run keyword if    '${operator}'=='='    Should Be Equal As Strings    ${content}    ${value}
+    \    ...    ELSE IF    '${operator}'=='!='    Should Be True    '${content}'!='${value}'
+    \    ...    ELSE IF    '${operator}'=='contain' or '${operator}'=='Contain' or '${operator}'=='contains' or '${operator}'=='Contains'    assertContains    ${content}    ${value}
+    \    ...    ELSE IF    '${operator}'=='>='    Should Be True    ${content}>=${value}
+    \    ...    ELSE IF    '${operator}'=='>'    Should Be True    ${content}>${value}
+    \    ...    ELSE IF    '${operator}'=='<='    Should Be True    ${content}<=${value}
+    \    ...    ELSE IF    '${operator}'=='<'    Should Be True    ${content}<${value}
+    \    ...    ELSE IF    '${operator}'=='in' or '${operator}'=='IN'    Should Be True    '${content}' in '${value}'
+
+assertsLoop
+    [Arguments]    ${content}=    ${arg}=    ${arg_Nested}=    ${operator}=    ${value}=
+    ${api_rsponse}    get api response
+    ${r1}    To Json    ${api_rsponse.content}
+    ${nums}    Get Length    ${r1['${arg}']}
+    : FOR    ${i}    IN RANGE    ${nums}
+    \    ${r2}    set variable    ${r1['${arg}'][${i}]['${arg_Nested}']}
+    \    #log    ${r1['${arg}'][${i}]}
+    \    Run keyword if    '${operator}'=='='    Should Be Equal As Strings    ${r2}    ${value}
+    \    ...    ELSE IF    '${operator}'=='!='    Should Be True    '${r2}'!='${value}'
+    \    ...    ELSE IF    '${operator}'=='contain' or '${operator}'=='Contain' or '${operator}'=='contains'    Should Contain    ${r2}    ${value}
+    \    ...    ELSE IF    '${operator}'=='>='    Should Be True    ${r2}>=${value}
+    \    ...    ELSE IF    '${operator}'=='>'    Should Be True    ${r2}>${value}
+    \    ...    ELSE IF    '${operator}'=='<='    Should Be True    ${r2}<=${value}
+    \    ...    ELSE IF    '${operator}'=='<'    Should Be True    ${r2}<${value}
+
+assertsEmpty
+    [Arguments]    ${content}    ${isEmpty}=false
+
+assertJsonTwo
+    [Arguments]    ${arg}    ${arg_Nested}=None    ${operator}=    ${value}=None    ${IsArray}=false    ${index_for_Array}=0
+    [Documentation]    ${msg['${arg_Nested}']}
+    ${api_rsponse}    get api response
+    ${content_decode}    Replace String    ${api_rsponse.content}    \r\n    ${EMPTY}
+    #${content_decode}    decode    ${api_rsponse.content}
+    ${data}    To Json    ${content_decode}
+    log    ${data}
+    #判断是否为数组
+    ${result}    Run keyword if    '${IsArray}'=='false'    set variable    ${data['${arg}']}
+    ...    ELSE    set variable    ${data[${index_for_Array}]['${arg}']}
+    #判断是否有嵌套
+    ${result}    Run keyword if    '${arg_Nested}'!='None'    set variable    ${result['${arg_Nested}']}
+    #根据运算符做判断
+    #${result}    dumps    ${result}
+    Run keyword if    '${operator}'=='='    should be equal as strings    ${result}    ${value}
+    ...    ELSE IF    '${operator}'=='contains'    Should Contain    ${result}    ${value}
+    ...    ELSE IF    '${operator}'=='!='    Should Be True    '${result}'!='${value}'    ${value}
+    ...    ELSE    Fatal Error    ${operator} \ is not valid
+
+assertApiResponse
+    [Arguments]    ${path}    ${operation}    @{value}
+    #Run keyword If    "ALL" in ${path}
+    ${r1}    get api response    ${path}
+    assertsOperation    ${r1}    ${operation}    @{value}
+
+assertApiResponses
+    [Arguments]    ${path}    ${operation}    @{value}
+    #Run keyword If    "ALL" in ${path}
+    @{r1}    get api response    ${path}
+    : FOR    ${r1}    IN    @{r1}
+    \    assertsOperation    ${r1}    ${operation}    @{value}
+
+assertContains
+    [Arguments]    ${content}    @{value}
+    : FOR    ${value}    IN    @{value}
+    \    Should Contain    ${content}    ${value}
+
+assertDbData
+    [Arguments]    ${path}    ${operation}    @{value}
+    @{r1}    Get Db Datas    ${path}
+    : FOR    ${r1}    IN    @{r1}
+    \    assertsOperation    ${r1}    ${operation}    @{value}

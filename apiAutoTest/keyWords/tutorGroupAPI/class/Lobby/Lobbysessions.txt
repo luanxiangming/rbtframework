@@ -1,0 +1,84 @@
+*** Keywords ***
+lobbySessions
+    [Arguments]    ${LobbyBrand}    ${PeriodMinutes}
+    #普通订课专用（获取大讲堂/随选快课）
+    ${uri}    Set Variable    /class/lobby/Lobbysessions
+    ${StartTimeBegin}    get time
+    ${StartTimeEnd}    Add Time To Date    ${StartTimeBegin}    24:00:00
+    ${PeriodMinutes_List}    Create List    ${PeriodMinutes}
+    ${params1}    Create Dictionary    LobbyBrand=${LobbyBrand}    StartTimeBegin=${StartTimeBegin}    StartTimeEnd=${StartTimeEnd}    PeriodMinutes=${PeriodMinutes_List}
+    ${params_json}    Dumps    ${params1}
+    ${params}    Set Variable    Token=${Token}&Query=${params_json}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${content}    Set Variable    ${resp.content}
+    assertContainValues    ${content}    true
+    ${content_string}    Convert to string    ${content}
+    ${contentRex}    Get Regexp Matches    ${content_string}    \"LobbySn\"\:(\\d+),    1
+    ${returnData}    Set Variable    ${contentRex[1]}    #${len}    Get Length    ${contentRex}    #${returnData}
+    ...    # run keyword if    ${len}>1    Set Variable    ${contentRex[1]}    # ELSE    Set Variable
+    ...    # 0
+    [Return]    ${returnData}
+
+lobbySessionsTwo
+    [Arguments]    ${LobbyBrand}    ${PeriodMinutes}
+    #每日一课专用
+    ${uri}    Set Variable    /class/lobby/Lobbysessions
+    ${nowTime}    get time
+    ${StartTimeBegin}    Add Time To Date    ${nowTime}    24:00:00
+    ${StartTimeEnd}    Add Time To Date    ${StartTimeBegin}    24:00:00
+    ${PeriodMinutes_List}    Create List    ${PeriodMinutes}
+    ${params1}    Create Dictionary    LobbyBrand=${LobbyBrand}    StartTimeBegin=${StartTimeBegin}    StartTimeEnd=${StartTimeEnd}    PeriodMinutes=${PeriodMinutes_List}
+    ${params_json}    Dumps    ${params1}
+    ${params}    Set Variable    Token=${Token}&Query=${params_json}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${content}    Set Variable    ${resp.content}
+    assertContainValues    ${content}    true
+    ${content_string}    Convert to string    ${content}
+    ${contentRex}    Get Regexp Matches    ${content_string}    \"LobbySn\"\:(\\d+),    1
+    ${returnData}    Set Variable    ${contentRex[0]}
+    [Return]    ${returnData}
+
+lobbySessionsThree
+    [Arguments]    ${LobbyBrand}    ${PeriodMinutes}
+    #过滤无排课专用，暂时未在任何CASE里用到
+    ${uri}    Set Variable    /class/lobby/Lobbysessions
+    ${StartTimeBegin}    get time
+    ${StartTimeEnd}    Add Time To Date    ${StartTimeBegin}    24:00:00
+    ${PeriodMinutes_List}    Create List    ${PeriodMinutes}
+    ${params1}    Create Dictionary    LobbyBrand=${LobbyBrand}    StartTimeBegin=${StartTimeBegin}    StartTimeEnd=${StartTimeEnd}    PeriodMinutes=${PeriodMinutes_List}
+    ${params_json}    Dumps    ${params1}
+    ${params}    Set Variable    Token=${Token}&Query=${params_json}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${content}    Set Variable    ${resp.content}
+    assertContainValues    ${content}    true
+    ${content_string}    Convert to string    ${content}
+    ${contentRex}    Get Regexp Matches    ${content_string}    \"LobbySn\"\:(\\d+),    1
+    ${len}    Get Length    ${contentRex}
+    ${returnData}    run keyword if    ${len}>0    Set Variable    ${contentRex[0]}
+    ...    ELSE    Set Variable    0
+    [Return]    ${returnData}
+
+LobbySessionsKeyTest
+    [Arguments]    ${LobbyBrand}=    ${StartTimeBegin}=    ${StartTimeEnd}=    ${FinishTimeBegin}=    ${FinishTimeEnd}=    ${PeriodMinutes}=
+    ...    ${LobbySn}=    ${ConsultantSn}=    ${MaterialSn}=    ${TypeSn}=    ${UseSessions}=    ${Level}=
+    ...    ${AvailableForFreeContract}=
+    #测试LobbySessions接口专用
+    ${uri}    Set Variable    /class/lobby/Lobbysessions
+    #${params}    Set Variable    Token=${Token}&Query={LobbyBrand:'${LobbyBrand}',StartTimeBegin:'${StartTimeBegin}',StartTimeEnd:'${StartTimeEnd}',FinishTimeBegin:'${FinishTimeBegin}',FinishTimeEnd:'${FinishTimeEnd}',PeriodMinutes:[${PeriodMinutes}],LobbySn:[${LobbySn}],ConsultantSn:[${ConsultantSn}],MaterialSn:[${MaterialSn}],TypeSn:[${TypeSn}],UseSessions:[${UseSessions}],Level:[${Level}],AvailableForFreeContract:[${AvailableForFreeContract}]}
+    ${params}    Set Variable    Token=${Token}&Query={LobbyBrand:'${LobbyBrand}',StartTimeBegin:'${StartTimeBegin}',StartTimeEnd:'${StartTimeEnd}',FinishTimeBegin:'${FinishTimeBegin}',FinishTimeEnd:'${FinishTimeEnd}',PeriodMinutes:[${PeriodMinutes}],LobbySn:[${LobbySn}],ConsultantSn:[${ConsultantSn}]}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    哈哈：${resp.content}
+    ${ReturnData}    Set Variable    ${resp.content}
+    [Return]    ${returnData}
+
+LobbySessionsKey
+    [Arguments]    ${query}
+    ${uri}    Set Variable    /class/lobby/Lobbysessions
+    ${params}    Set Variable    Token=${Token}&Query=${query}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    哈哈：${resp.content}
+    ${ReturnData}    Set Variable    ${resp.content}
+    [Return]    ${returnData}

@@ -1,0 +1,10 @@
+*** Keywords ***
+MaterialInfo
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${ProductSn}
+    ${uri}    Set Variable    /Class/Material/Setting/Plan/GetInfo
+    ${params}    Set Variable    Token=${token}&Query={"TutorBrand":${TutorBrand},"ClientSn":[${ClientSn}],"ProductSn":[${ProductSn}]}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+    [Return]    ${returnData}

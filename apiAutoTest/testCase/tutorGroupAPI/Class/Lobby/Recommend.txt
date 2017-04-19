@@ -1,0 +1,36 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/Recommend.txt
+Resource          ../../../../framework/init.txt
+
+*** Test Cases ***
+Class_Lobby_RecommendLobbySessions_01_1_001
+    [Documentation]    查询有英文讲堂合同的客户_vipabc
+    log    TESTCASE:RecommendLobbySessions001_查询有英文讲堂合同的客户_vipabc
+    Recommend    &{TutorBrand}[vipabc]    &{V_email}[year001_sn]    2016-01-01 17:10:40
+    ${r1}    get api response
+    ${r1}    To Json    ${r1}
+    ${len}    get length    ${r1["Result"]}
+    should be true    ${len}==42
+    ${LobbySn_list}    get api response    Result,all,LobbySn
+    should be true    ${LobbySn_list}==[76553, 76554, 76555, 76608, 76609, 76610, 76749, 76750, 76751, 76752, 76753, 76785, 76786, 76787, 76788, 76789, 76827, 76828, 76829, 76830, 76831, 76873, 76874, 76875, 76876, 76877, 76984, 76985, 76986, 76987, 76988, 77022, 77024, 77026, 77028, 77029, 77055, 77056, 77057, 77093, 77094, 77095]
+    log    TESTCASE:RecommendLobbySessions001_查询有英文讲堂合同的客户_TutorABCJr
+    Recommend    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    2016-01-01 17:10:40
+    ${r1}    get api response
+    ${r1}    To Json    ${r1}
+    ${len}    get length    ${r1["Result"]}
+    should be true    ${len}==107
+    ${LobbySn_list}    get api response    Result,all,LobbySn
+    should be true    ${LobbySn_list}==[76542, 76547, 76548, 76558, 76559, 76560, 76562, 76564, 76565, 76566, 76601, 76602, 76613, 76614, 76615, 76616, 76617, 76619, 76620, 76621, 76622, 76747, 76748, 76750, 76751, 76752, 76753, 76754, 76756, 76757, 76758, 76782, 76783, 76784, 76785, 76786, 76787, 76788, 76789, 76790, 76791, 76792, 76794, 76825, 76826, 76827, 76828, 76829, 76831, 76832, 76833, 76834, 76835, 76836, 76837, 76870, 76871, 76872, 76873, 76876, 76877, 76878, 76879, 76880, 76881, 76882, 76982, 76983, 76985, 76986, 76987, 76988, 76989, 76990, 76992, 76993, 76994, 77019, 77022, 77028, 77029, 77030, 77034, 77035, 77036, 77048, 77049, 77050, 77060, 77061, 77062, 77063, 77065, 77067, 77082, 77083, 77084, 77098, 77099, 77100, 77101, 77102, 77103, 77104, 77106, 77107, 77108]
+
+Class_Lobby_RecommendLobbySessions_02_1_001
+    [Documentation]    查询仅有奥数讲堂合同的客户_vipabcJr
+    log    TESTCASE:RecommendLobbySessions002_查询仅有奥数讲堂合同的客户_vipabcJr
+    Recommend    &{TutorBrand}[vipabcJr]    &{Vjr_email}[olym006_sn]
+    assertApiResponse    Success    =    true
+    queryLobby_session_RecommendLobbySessions
+    @{sn_api_list}    get api response    Result,all,LobbySn
+    @{sn_db_list}    Get Db Datas    all,0
+    #@{sn_api_list}    sort list    @{sn_api_list}
+    should be true    @{sn_api_list}==[]    #接口目前就是应该返回空值,Max要求调整

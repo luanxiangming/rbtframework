@@ -1,0 +1,9 @@
+*** Keywords ***
+loginTemplate
+    [Arguments]    ${email}    ${password}
+    ${returnData}    login    ${email}    ${password}
+    \    ${returnData}
+
+test1
+    ${test1}    set variable    \\xe6\\x82\\xa8
+    ${test2}    decode    ${test1}

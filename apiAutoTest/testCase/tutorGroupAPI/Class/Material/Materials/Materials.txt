@@ -1,0 +1,77 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/Materials.txt
+Resource          ../../../../../framework/init.txt
+Resource          ../../../../../keyWords/AssertsOperation/AssertData/AssertData.txt
+
+*** Test Cases ***
+Materials0101_MaterialSn参数为空
+    [Tags]    middle    stop
+    ${r1}    Materials    ${EMPTY}
+    ${r2}    JsonUtil    ${r1}    ReturnCode
+    assertsOperation    ${r2}    =    null
+
+Materials0102_取得单笔教材
+    [Tags]    middle    stop
+    #获取MaterialSn
+    ${MaterialSn1}    GetMaterial    vipabc
+    #查询教材
+    Materials    ${MaterialSn1}
+    #提取返回信息
+    ${r1_length}    JsonLength    Result    任意
+    log    222222222
+    ${success}    JsonUtil    Success
+    log    33333333333333
+    ${returnCode}    JsonUtil    ReturnCode
+    ${MaterialSn_1}    JsonUtil    Result    MaterialSn
+    log    222222222
+    ${sn}    JsonUtil    Result    Sn
+    ${TitleEn}    JsonUtil    Result    TitleEn
+    ${DescriptionEn}    JsonUtil    Result    DescriptionEn
+    ${Levels}    JsonUtil    Result    Levels
+    log    1111111111111
+    ${Topics}    JsonUtil    Result    Topics
+    #断言返回值
+    assertsOperation    ${success}    =    true
+    assertsOperation    ${MaterialSn_1}    =    ${MaterialSn1}
+    assertsOperation    ${sn}    !=    null
+    assertsOperation    ${TitleEn}    !=    null
+    assertsOperation    ${DescriptionEn}    !=    null
+    assertsOperation    ${Levels}    !=    null
+    assertsOperation    ${Topics}    !=    null
+    assertsOperation    ${r1_length}    =    1
+    #检查资料流
+    ${db1}    queryMaterial    ${MaterialSn1}
+    RunAssertData    assertMaterial    ${db1}
+
+Materials0103_取得两笔教材
+    [Tags]    middle    stop
+    #获取MaterialSn
+    ${MaterialSn1}    GetMaterial    vipabc
+    ${MaterialSn2}    GetMaterial    vipabc    1
+    #查询教材
+    Materials    ${MaterialSn1},${MaterialSn2}
+    #提取返回信息
+    ${r1_length}    JsonLength    Result    1
+    ${success}    JsonUtil    Success
+    ${MaterialSn_1}    JsonUtil    Result    MaterialSn
+    ${MaterialSn_2}    JsonUtil    Result    MaterialSn    1
+    ${sn}    JsonUtil    Result    Sn
+    ${TitleEn}    JsonUtil    Result    TitleEn
+    ${DescriptionEn}    JsonUtil    Result    DescriptionEn
+    ${Levels}    JsonUtil    Result    Levels
+    ${Topics}    JsonUtil    Result    Topics
+    #断言返回值
+    assertsOperation    ${success}    =    true
+    assertsOperation    ${MaterialSn_1}    =    ${MaterialSn1}
+    assertsOperation    ${MaterialSn_2}    =    ${MaterialSn2}
+    assertsOperation    ${sn}    !=    null
+    assertsOperation    ${TitleEn}    !=    null
+    assertsOperation    ${DescriptionEn}    !=    null
+    assertsOperation    ${Levels}    !=    null
+    assertsOperation    ${Topics}    !=    null
+    assertsOperation    ${r1_length}    =    2
+    #检查资料流
+    ${db1}    queryMaterial    ${MaterialSn1}
+    RunAssertData    assertMaterial    ${db1}

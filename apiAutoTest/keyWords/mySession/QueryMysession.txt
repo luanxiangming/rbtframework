@@ -1,0 +1,18 @@
+*** Settings ***
+
+*** Variables ***
+
+*** Keywords ***
+queryLobbySession
+    [Arguments]    ${type}    ${isSettingCondition}    ${queryDate}
+    [Tags]    apitest
+    ${headers}    create Dictionary    Content-Type=application/x-www-form-urlencoded
+    Create Session    api    http://stage.vipabc.com    ${headers}
+    ${uri}    Set Variable    /Home/Login
+    ${params}    Create Dictionary    type=${type}    isSettingCondition=${isSettingCondition}    queryDate=${queryDate}
+    ${resp}    Post Request    api    ${uri}    ${params}    ${headers}
+    log    打印日志content:${resp.content}
+    log    打印日志headers:${resp.headers}
+    log    打印日志cookie:${resp.cookies}
+    Should Contain    ${resp.content}    OK
+    Should Be Equal As Strings    ${resp.status_code}    200

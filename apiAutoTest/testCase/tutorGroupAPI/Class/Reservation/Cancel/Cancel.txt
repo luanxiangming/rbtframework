@@ -1,0 +1,246 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg    stop
+Resource          ../../../../../keyWords/tutorGroupAPI/class/reservation/Reserve.txt
+Resource          ../../../../../framework/init.txt
+Resource          ../../../../../keyWords/reservation/SetReservation.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Lobby/Lobbysessions.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/reservation/BookingRecords.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/reservation/cancel.txt
+
+*** Test Cases ***
+CancelFail001_vipabc品牌不对（大讲堂）
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=TutorAbcJr    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail002_vipabc客户SN不符（大讲堂）
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year001_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail003_vipabc取消未预定的大讲堂
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${LobbySn2}    lobbySessionsTwo    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn2}    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail004_vipabc传入的Lobbsn不存在（大讲堂）
+    [Tags]    high
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=100000000    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+
+CancelFail005_yearContract1on1课程时间和课程类型不符
+    [Documentation]    SstNumber未起作用，待PG确认
+    [Tags]    high
+    ${returnTime}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    Max=1    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    SstNumber=2    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+    #${returnData3}    Cancel    ${params_list}
+    #assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail006_yearContract1on1取消未预定的课程
+    [Tags]    high
+    ${returnTime}    TimeUtil    20
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    SstNumber=7    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    #assertEqualValueByJsonArray    ${returnData}    Message    未查詢到訂課記錄
+
+CancelFail007_yearContract传入不存在的课程类型代码
+    [Documentation]    SstNumber未起作用，待PG确认
+    [Tags]    high
+    ${returnTime}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    Max=1    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    SstNumber=2000    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    True
+    #${returnData3}    Cancel    ${params_list}
+    #assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail008_vipabc取消未预定的随选快课
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    10
+    ${LobbySn2}    lobbySessionsTwo    Abc    10
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn2}    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail009_vipabc缺失TutorBrand
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail010_vipabc传入空值TutorBrand
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByString    ${returnData2}    Success    false    ReturnCode    "API.1.20.51.EX"
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail011_vipabc取消大讲堂缺失LobbySn
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail012_vipabc取消大讲堂LobbySn传入空值
+    [Tags]    high
+    ${LobbySn}    lobbySessions    Abc    45
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=${LobbySn}    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    LobbySn=    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail013_yearContract取消小班课SessionTime缺失
+    [Documentation]    SstNumber未起作用，待PG确认
+    [Tags]    high
+    ${returnTime}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    Max=1    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SstNumber=7    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail014_yearContract取消小班课SessionTime传入空值
+    [Documentation]    SstNumber未起作用，待PG确认
+    [Tags]    high
+    ${returnTime}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=vipabc    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    Max=1
+    ...    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=    Max=1    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail015_yearContract取消小班课ClientSn缺失
+    [Documentation]    SstNumber未起作用，待PG确认
+    [Tags]    high
+    ${returnTime}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    Max=1    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    SessionTime=${returnTime}    SstNumber=7    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByJsonArray    ${returnData2}    Success    False
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True
+
+CancelFail016_yearContract取消小班课ClientSn传入空值
+    [Documentation]    SstNumber未起作用，待PG确认
+    [Tags]    high
+    ${returnTime}    TimeUtil    25
+    ${params1}    Create Dictionary    TutorBrand=vipabc    TutorBrand=vipabc    ClientSn=&{V_email}[year024_sn]    SessionTime=${returnTime}    Max=1
+    ...    IsTestMode=false
+    ${params_list}    Create List    ${params1}
+    ${returnData}    reserve    ${params_list}
+    assertEqualValueByJsonArray    ${returnData}    Success    True
+    assertEqualValueByJsonArray    ${returnData}    Message    訂課成功
+    ${params2}    Create Dictionary    TutorBrand=vipabc    ClientSn=    SessionTime=${returnTime}    Max=1    IsTestMode=false
+    ${params_list2}    Create List    ${params2}
+    ${returnData2}    Cancel    ${params_list2}
+    assertEqualValueByString    ${returnData2}    Success    false    ReturnCode    "API.1.20.51.EX"
+    ${returnData3}    Cancel    ${params_list}
+    assertEqualValueByJsonArray    ${returnData3}    Success    True

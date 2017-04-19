@@ -1,0 +1,22 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../../../framework/init.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/Materials.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Lobby/Lobbysessions.txt
+
+*** Test Cases ***
+Lobbysessions001_大讲堂
+    [Tags]    debug
+    #获取指定时间段内的所有大讲堂
+    ${StartTimeBegin}    get time
+    ${StartTimeEnd}    Add Time To Date    ${StartTimeBegin}    24:00:00
+    ${returnData}    LobbySessionsKey    {LobbyBrand:'ALL',StartTimeBegin:'${StartTimeBegin}',StartTimeEnd:'${StartTimeEnd}',PeriodMinutes:[45]}
+    log    ${returnData}
+    #获取接口返回值并判断是否符合预期
+    ${Success}    JsonUtil    ${returnData}    Success
+    assertsOperation    ${Success}    =    true
+    assertsLoop    ${returnData}    Result    LobbySn    >=    1000
+    assertsLoop    ${returnData}    Result    PeriodMinutes    =    45
+    #assertsLoop    ${returnData}    Result    LobbyBrand    =    ALL
+    assertsLoop    ${returnData}    Result    UseSessions    =    1.0

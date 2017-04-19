@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20170320 10:47:59.376" generator="Robot 3.0.2 (Python 3.5.0 on darwin)">
+<suite id="s1" name="Login" source="/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/testCase/tutorGroupAPI/customer/Login.txt">
+<kw library="init" type="setup" name="Setup">
+<kw library="OperatingSystem" name="Get File">
+<doc>Returns the contents of a specified file.</doc>
+<arguments>
+<arg>/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/env.txt</arg>
+</arguments>
+<assign>
+<var>${evn}</var>
+</assign>
+<msg html="yes" timestamp="20170320 10:47:59.542" level="INFO">Getting file '&lt;a href="file:///Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/env.txt"&gt;/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/env.txt&lt;/a&gt;'.</msg>
+<msg timestamp="20170320 10:47:59.545" level="INFO">${evn} = http://stageapi.vipabc.com/TutorGroup.Api</msg>
+<status endtime="20170320 10:47:59.545" status="PASS" starttime="20170320 10:47:59.541"></status>
+</kw>
+<status endtime="20170320 10:47:59.545" status="PASS" starttime="20170320 10:47:59.540"></status>
+</kw>
+<test id="s1-t1" name="Customer_Login_01_1_001">
+<kw library="Customer" name="tg_Ligin_Template">
+<arguments>
+<arg>2</arg>
+<arg>&amp;{V_email}[year025]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+<arg>172.16.8.76</arg>
+<arg>&amp;{V_email}[year025_sn]</arg>
+<arg>!=</arg>
+<arg>null</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.555" level="FAIL">Variable '&amp;{V_email}' not found.</msg>
+<status endtime="20170320 10:47:59.556" status="FAIL" starttime="20170320 10:47:59.553"></status>
+</kw>
+<kw library="Customer" name="tg_Ligin_Template">
+<arguments>
+<arg>1</arg>
+<arg>&amp;{T_email}[year002]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+<arg>172.16.8.76</arg>
+<arg>&amp;{T_email}[year002_sn]</arg>
+<arg>!=</arg>
+<arg>null</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.557" level="FAIL">Variable '&amp;{T_email}' not found.</msg>
+<status endtime="20170320 10:47:59.558" status="FAIL" starttime="20170320 10:47:59.556"></status>
+</kw>
+<kw library="Customer" name="tg_Ligin_Template">
+<arguments>
+<arg>4</arg>
+<arg>&amp;{Vjr_email}[year001]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+<arg>172.16.8.76</arg>
+<arg>&amp;{Vjr_email}[year001_sn]</arg>
+<arg>!=</arg>
+<arg>null</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.559" level="FAIL">Variable '&amp;{Vjr_email}' not found.</msg>
+<status endtime="20170320 10:47:59.560" status="FAIL" starttime="20170320 10:47:59.558"></status>
+</kw>
+<kw library="Customer" name="tg_Ligin_Template">
+<arguments>
+<arg>8</arg>
+<arg>&amp;{Vjp_email}[year003]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+<arg>172.16.8.76</arg>
+<arg>&amp;{Vjp_email}[year003_sn]</arg>
+<arg>!=</arg>
+<arg>null</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.562" level="FAIL">Variable '&amp;{Vjp_email}' not found.</msg>
+<status endtime="20170320 10:47:59.562" status="FAIL" starttime="20170320 10:47:59.560"></status>
+</kw>
+<doc>${TutorBrand} | ${Email} | ${Password} | ${IpAddress} | ${client_Sn} | ${operation} | ${r_salt}</doc>
+<tags>
+<tag>high</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.562" status="FAIL" starttime="20170320 10:47:59.552">Several failures occurred:
+
+1) Variable '&amp;{V_email}' not found.
+
+2) Variable '&amp;{T_email}' not found.
+
+3) Variable '&amp;{Vjr_email}' not found.
+
+4) Variable '&amp;{Vjp_email}' not found.</status>
+</test>
+<test id="s1-t2" name="Customer_Login_01_1_002">
+<kw library="BuiltIn" name="Set Variable">
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<arguments>
+<arg>3</arg>
+</arguments>
+<assign>
+<var>${TutorBrand}</var>
+</assign>
+<msg timestamp="20170320 10:47:59.575" level="INFO">${TutorBrand} = 3</msg>
+<status endtime="20170320 10:47:59.575" status="PASS" starttime="20170320 10:47:59.573"></status>
+</kw>
+<kw library="Customer" name="tg_Login_Simple">
+<tags>
+<tag>apitest</tag>
+</tags>
+<arguments>
+<arg>${TutorBrand}</arg>
+<arg>&amp;{Tjr_email}[year002]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+<arg>172.16.8.76</arg>
+<arg>&amp;{Tjr_email}[year002_sn]</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.577" level="FAIL">Variable '&amp;{Tjr_email}' not found.</msg>
+<status endtime="20170320 10:47:59.577" status="FAIL" starttime="20170320 10:47:59.575"></status>
+</kw>
+<doc>${TutorBrand} | ${Email} | ${Password} | ${IpAddress} | ${client_Sn} | ${operation} | ${r_salt}</doc>
+<tags>
+<tag>high</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.577" status="FAIL" starttime="20170320 10:47:59.571">Variable '&amp;{Tjr_email}' not found.</status>
+</test>
+<test id="s1-t3" name="Customer_Login_01_1_003">
+<kw library="Customer" name="tg_Login_Simple">
+<tags>
+<tag>apitest</tag>
+</tags>
+<arguments>
+<arg>tutorabc</arg>
+<arg>&amp;{T_email}[year002]</arg>
+<arg>wrongPassword</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.580" level="FAIL">Variable '&amp;{T_email}' not found.</msg>
+<status endtime="20170320 10:47:59.580" status="FAIL" starttime="20170320 10:47:59.579"></status>
+</kw>
+<tags>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.581" status="FAIL" starttime="20170320 10:47:59.578">Variable '&amp;{T_email}' not found.</status>
+</test>
+<test id="s1-t4" name="Customer_Login_01_2_004">
+<kw library="Customer" name="tg_Login_Simple">
+<tags>
+<tag>apitest</tag>
+</tags>
+<arguments>
+<arg>vipabc</arg>
+<arg>&amp;{V_email}[year022]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.584" level="FAIL">Variable '&amp;{V_email}' not found.</msg>
+<status endtime="20170320 10:47:59.584" status="FAIL" starttime="20170320 10:47:59.583"></status>
+</kw>
+<tags>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.584" status="FAIL" starttime="20170320 10:47:59.582">Variable '&amp;{V_email}' not found.</status>
+</test>
+<test id="s1-t5" name="Customer_Login_01_3_005">
+<kw library="Customer" name="tg_Login_Simple">
+<tags>
+<tag>apitest</tag>
+</tags>
+<arguments>
+<arg>vipabc</arg>
+<arg>wrongEmailAddress</arg>
+<arg>wrongPassword</arg>
+</arguments>
+<kw library="BuiltIn" name="Set Variable">
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<arguments>
+<arg>/Customer/Login</arg>
+</arguments>
+<assign>
+<var>${uri}</var>
+</assign>
+<msg timestamp="20170320 10:47:59.586" level="INFO">${uri} = /Customer/Login</msg>
+<status endtime="20170320 10:47:59.586" status="PASS" starttime="20170320 10:47:59.586"></status>
+</kw>
+<kw library="BuiltIn" name="Set Variable">
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<arguments>
+<arg>Token=${token}&amp;Query={ "TutorBrand":"${TutorBrand}", "Email":"${Email}", "Password":"${Password}", "IsFromIms":${IsFromIms},"IpAddress":"${IpAddress}" }</arg>
+</arguments>
+<assign>
+<var>${param}</var>
+</assign>
+<msg timestamp="20170320 10:47:59.587" level="FAIL">Variable '${token}' not found.</msg>
+<status endtime="20170320 10:47:59.587" status="FAIL" starttime="20170320 10:47:59.586"></status>
+</kw>
+<status endtime="20170320 10:47:59.588" status="FAIL" starttime="20170320 10:47:59.585"></status>
+</kw>
+<tags>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.588" status="FAIL" starttime="20170320 10:47:59.585">Variable '${token}' not found.</status>
+</test>
+<test id="s1-t6" name="Customer_Login_01_2_006">
+<kw library="Customer" name="tg_Login">
+<tags>
+<tag>apitest</tag>
+</tags>
+<doc>默认IsfromIms=False</doc>
+<arguments>
+<arg>vipabc</arg>
+<arg>&amp;{V_email}[year026]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.592" level="FAIL">Variable '&amp;{V_email}' not found.</msg>
+<status endtime="20170320 10:47:59.592" status="FAIL" starttime="20170320 10:47:59.591"></status>
+</kw>
+<doc>TODO
+是贵宾且异常的帐号会发短信通知
+
+目前无法自动验证，需要手动验证</doc>
+<tags>
+<tag>debug</tag>
+<tag>manual</tag>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.592" status="FAIL" starttime="20170320 10:47:59.589">Variable '&amp;{V_email}' not found.</status>
+</test>
+<test id="s1-t7" name="Customer_Login_01_2_007">
+<kw library="Customer" name="tg_Login">
+<tags>
+<tag>apitest</tag>
+</tags>
+<doc>默认IsfromIms=False</doc>
+<arguments>
+<arg>vipabc</arg>
+<arg>&amp;{V_email}[year027]</arg>
+<arg>&amp;{password}[pwd1]</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.596" level="FAIL">Variable '&amp;{V_email}' not found.</msg>
+<status endtime="20170320 10:47:59.597" status="FAIL" starttime="20170320 10:47:59.595"></status>
+</kw>
+<doc>TODO
+是贵宾且异常的帐号会发短信通知
+
+目前无法自动验证，需要手动验证</doc>
+<tags>
+<tag>manual</tag>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.597" status="FAIL" starttime="20170320 10:47:59.593">Variable '&amp;{V_email}' not found.</status>
+</test>
+<test id="s1-t8" name="Customer_Login_02_1_001">
+<kw library="BuiltIn" name="Run Keyword If">
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<arguments>
+<arg>${product}</arg>
+<arg>set variable</arg>
+<arg>1111</arg>
+<arg>ELSE</arg>
+<arg>set variable</arg>
+<arg>D0C01F2D9271D2ACE113D9178DF52B8606903FBD</arg>
+</arguments>
+<assign>
+<var>${V_security}</var>
+</assign>
+<msg timestamp="20170320 10:47:59.600" level="FAIL">Variable '${product}' not found.</msg>
+<status endtime="20170320 10:47:59.600" status="FAIL" starttime="20170320 10:47:59.599"></status>
+</kw>
+<doc>说明：
+Password+Salt，透過Sha1加密
+Tjr例外，直接Password进行tree3加密
+
+sha1(qatest123705757062)=D0C01F2D9271D2ACE113D9178DF52B8606903FBD
+
+request eg：
+http://stageapi.vipabc.com/TutorGroup.Api/Customer/Login?Token=e55kjx7QIpU%3d&amp;Query={%22TutorBrand%22:%22tutorabcjr%22,%22Email%22:%22qatestapi004@tutorabcjr.com%22,%22Password%22:%22qatest123%22,%22IsFromIms%22:false,%22IpAddress%22:%22172.16.8.76%22}</doc>
+<tags>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.600" status="FAIL" starttime="20170320 10:47:59.598">Variable '${product}' not found.</status>
+</test>
+<test id="s1-t9" name="Customer_Login_02_2_002">
+<kw library="Customer" name="tg_Login">
+<tags>
+<tag>apitest</tag>
+</tags>
+<doc>默认IsfromIms=False</doc>
+<arguments>
+<arg>vipabc</arg>
+<arg>&amp;{V_email}[year025]</arg>
+<arg>8D0B7814A5CA57D75B832EE7D2CBDD9217292752</arg>
+<arg>${EMPTY}</arg>
+<arg>${EMPTY}</arg>
+<arg>true</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.602" level="FAIL">Variable '&amp;{V_email}' not found.</msg>
+<status endtime="20170320 10:47:59.602" status="FAIL" starttime="20170320 10:47:59.602"></status>
+</kw>
+<doc>Email+Salt，透過Sha1加密
+
+SHa1(qatestapi025@vipabcde.com705757062)=8D0B7814A5CA57D75B832EE7D2CBDD9217292752</doc>
+<tags>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.603" status="FAIL" starttime="20170320 10:47:59.600">Variable '&amp;{V_email}' not found.</status>
+</test>
+<test id="s1-t10" name="Customer_Login_02_2_003">
+<kw library="Customer" name="tg_Login">
+<tags>
+<tag>apitest</tag>
+</tags>
+<doc>默认IsfromIms=False</doc>
+<arguments>
+<arg>vipabc</arg>
+<arg>&amp;{V_email}[year025]</arg>
+<arg>${EMPTY}</arg>
+<arg>${EMPTY}</arg>
+<arg>jM1kEUyQkU=MTOxQ</arg>
+<arg>true</arg>
+</arguments>
+<msg timestamp="20170320 10:47:59.606" level="FAIL">Variable '&amp;{V_email}' not found.</msg>
+<status endtime="20170320 10:47:59.607" status="FAIL" starttime="20170320 10:47:59.605"></status>
+</kw>
+<doc>ClientSn 2599124，透過Tree3加密</doc>
+<tags>
+<tag>middle</tag>
+<tag>tg</tag>
+</tags>
+<status critical="yes" endtime="20170320 10:47:59.607" status="FAIL" starttime="20170320 10:47:59.603">Variable '&amp;{V_email}' not found.</status>
+</test>
+<kw library="init" type="teardown" name="Teardown">
+<kw name="Delete All Sessions">
+<msg timestamp="20170320 10:47:59.616" level="FAIL">No keyword with name 'Delete All Sessions' found.</msg>
+<status endtime="20170320 10:47:59.616" status="FAIL" starttime="20170320 10:47:59.616"></status>
+</kw>
+<status endtime="20170320 10:47:59.616" status="FAIL" starttime="20170320 10:47:59.608">No keyword with name 'Delete All Sessions' found.</status>
+</kw>
+<status endtime="20170320 10:47:59.616" status="FAIL" starttime="20170320 10:47:59.379">Suite teardown failed:
+No keyword with name 'Delete All Sessions' found.</status>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="10">Critical Tests</stat>
+<stat pass="0" fail="10">All Tests</stat>
+</total>
+<tag>
+<stat pass="0" fail="1">debug</stat>
+<stat pass="0" fail="2">high</stat>
+<stat pass="0" fail="2">manual</stat>
+<stat pass="0" fail="8">middle</stat>
+<stat pass="0" fail="10">tg</stat>
+</tag>
+<suite>
+<stat pass="0" id="s1" fail="10" name="Login">Login</stat>
+</suite>
+</statistics>
+<errors>
+<msg timestamp="20170320 10:47:59.415" level="ERROR">Error in resource file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/init.txt': Creating keyword '//' failed: Keyword with same name defined multiple times.</msg>
+<msg timestamp="20170320 10:47:59.430" level="ERROR">Error in file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/init.txt': Importing test library 'RequestsLibrary' failed: ImportError: No module named 'RequestsLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /Library/Frameworks/Python.framework/Versions/3.5/bin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python35.zip
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/plat-darwin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/lib-dynload
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages</msg>
+<msg timestamp="20170320 10:47:59.455" level="ERROR">Error in file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/init.txt': Resource file 'GlobalVariable.txt' does not exist.</msg>
+<msg timestamp="20170320 10:47:59.503" level="ERROR">Error in file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/Utils.txt': Importing test library 'DatabaseLibrary' failed: ImportError: No module named 'DatabaseLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /Library/Frameworks/Python.framework/Versions/3.5/bin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python35.zip
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/plat-darwin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/lib-dynload
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages</msg>
+<msg timestamp="20170320 10:47:59.506" level="ERROR">Error in file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/Utils.txt': Importing test library 'RequestsLibrary' failed: ImportError: No module named 'RequestsLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /Library/Frameworks/Python.framework/Versions/3.5/bin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python35.zip
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/plat-darwin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/lib-dynload
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages</msg>
+<msg timestamp="20170320 10:47:59.510" level="ERROR">Error in file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/Utils.txt': Importing test library 'CustomLibrary' failed: ImportError: No module named 'CustomLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /Library/Frameworks/Python.framework/Versions/3.5/bin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python35.zip
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/plat-darwin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/lib-dynload
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages</msg>
+<msg timestamp="20170320 10:47:59.533" level="ERROR">Error in file '/Users/oliverluan/Developer/TutorgroupAPI/apiAutoTest/framework/init.txt': Importing test library 'CustomLibrary' failed: ImportError: No module named 'CustomLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /Library/Frameworks/Python.framework/Versions/3.5/bin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python35.zip
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/plat-darwin
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/lib-dynload
+  /Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages</msg>
+</errors>
+</robot>

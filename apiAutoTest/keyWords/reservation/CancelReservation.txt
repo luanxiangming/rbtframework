@@ -1,0 +1,26 @@
+*** Settings ***
+
+*** Variables ***
+
+*** Keywords ***
+CancelReservation
+    [Arguments]    ${sessionTime}    ${sstNumber}
+    [Documentation]    大讲 堂
+    [Tags]
+    ${headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded    Referer=${HOST}/Center/
+    ${uri}    Set Variable    /Center/Reservation/CancelReservation
+    ${params}    Create Dictionary    sessionTime=${sessionTime}    sstNumber=${sstNumber}
+    ${resp}    Post Request    api    ${uri}    ${params}    headers=${headers}
+    log    打印日志content:${resp.content}
+
+CancelReservationByJson
+    [Arguments]    ${SstNumber}    ${SessionTime}
+    [Documentation]    1对1/2/3，小班课
+    ${headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded    Referer=${HOST}/Center/
+    ${uri}    Set Variable    /Center/Reservation/CancelReservationByJson
+    ${params}    Create Dictionary    SstNumber=${SstNumber}    SessionTime=${SessionTime}
+    ${params_list}    Create List    ${params}
+    ${params_json}    Dumps    ${params_list}
+    ${params1}    Create Dictionary    data=${params_json}
+    ${resp}    Post Request    api    ${uri}    ${params1}    headers=${headers}
+    log    打印日志content:${resp.content}

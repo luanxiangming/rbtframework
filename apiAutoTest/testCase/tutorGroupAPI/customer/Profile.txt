@@ -1,0 +1,125 @@
+*** Settings ***
+Suite Setup       Setup
+Test Setup
+Force Tags        tg    stop
+Default Tags
+Resource          ../../../keyWords/tutorGroupAPI/customer/customer/Customer.txt
+Resource          ../../../framework/init.txt
+
+*** Test Cases ***
+GetProfilesSuccess01A01_vipabc
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    vipabc    [&{V_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2
+
+GetProfilesSuccess01B02_vipabcJr
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    vipabcjr    [&{Vjr_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{Vjr_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    4
+
+GetProfilesSuccess03_tutorabc
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    tutorabc    [&{T_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{T_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    1
+
+GetProfilesSuccess04_tutorabcJr
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    tutorabcjr    [&{Tjr_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{Tjr_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    3
+
+GetProfilesSuccess05_vipabcJp
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    japan    [&{Vjp_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{Vjp_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    8
+
+GetProfilesSuccess06_同时查询同一品牌多个clientsn
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    vipabc    [&{V_email}[year001_sn],&{V_email}[super003_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[super003_sn]    1
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2    1
+
+GetProfilesSuccess07_同时查询不同品牌多个clientsn
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0 | ${false}=true
+    [Tags]    middle
+    ${returnData}    tg_Profiles_Simple    vipabc    [&{Vjr_email}[year001_sn],&{V_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[year001_sn]
+
+GetProfilesSuccess08_同时查询不同品牌多个clientsn,不传TutorBrand
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0 | ${false}=true
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    \    [&{Vjr_email}[year001_sn],&{V_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{Vjr_email}[year001_sn]    1
+
+GetProfilesSuccess09_TutorabcBrand为TutorGroup
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    tutorGroup    [&{V_email}[year001_sn],&{Vjp_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{Vjp_email}[year001_sn]    1
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    8    1
+
+GetProfilesSuccess10_TutorabcBrand非必要
+    [Tags]    high
+    ${returnData}    tg_Profiles_Simple    \    [&{V_email}[year001_sn]]
+    assertEqualValueByJson    ${returnData}    Success    True
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    ClientSn    &{V_email}[year001_sn]
+    assertEqualValueByJsonArrayNested    ${returnData}    Result    TutorBrand    2
+
+GetProfilesFail01_Token错误
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0 | ${false}=true
+    [Tags]    low
+    ${returnData}    tg_Profiles_CustomParam    wrongToken    {TutorBrand:"VIPABC",ClientSN:[2598825,2598462]}
+    assertEqualValueByJson    ${returnData}    Message    Token參數錯誤
+    assertEqualValueByJson    ${returnData}    ReturnCode    API.TOKEN.02
+
+GetProfilesFail02_TutorBrand为非法值
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0 | ${false}=true
+    [Tags]    low
+    ${returnData}    tg_Profiles_CustomParam    ${Token}    {TutorBrand:"wrongTutotBrand",ClientSN:[2598825,2598462]}
+    assertContainValues    ${returnData}    API.EX    wrongTutotBrand is not a valid value
+
+GetProfilesFail03_缺少参数Token
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0 | ${false}=true
+    [Tags]    low
+    ${returnData}    tg_Profiles_CustomParam    \    {TutorBrand:"vipabc",ClientSN:[2598825,2598462]}
+    assertContainValues    ${returnData}    找不到參數：Token
+
+GetProfilesFail04_ClientSn不存在
+    [Documentation]    ${content} | ${arg} | ${arg_Nested} | ${value} | ${index}=0 | ${false}=true
+    [Tags]    low
+    ${returnData}    tg_Profiles_Simple    vipabc    [9999999]
+    assertEqualValueByJson    ${returnData}    Result    []
+    assertEqualValueByJson    ${returnData}    Success    True
+
+debug
+    [Tags]    debug
+    ${r1}    Profiles_Get_Simple    2598387
+    ${r2}    GetJsonData    Result,0,TutorBrand
+
+debug1
+    [Tags]    debug2    debug1
+    log    test22222222222
+
+debug3
+    [Tags]    debug1    debug3
+    log    test22222222222

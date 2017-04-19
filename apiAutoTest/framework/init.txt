@@ -1,0 +1,53 @@
+*** Settings ***
+Library           String
+Library           json
+Library           RequestsLibrary
+Library           OperatingSystem
+Resource          GlobalVariable.txt
+Resource          Assertions.txt
+Resource          Utils.txt
+Library           DateTime
+Resource          DbOperation.txt
+Resource          ../keyWords/dataOperation/DataOperation.txt
+Library           CustomLibrary
+Library           Collections
+
+*** Keywords ***
+Setup
+    [Timeout]
+    ${evn}    Get File    ${CURDIR}/env.txt
+//    ${localConfig}    Get File    D:/notInitData.txt
+    ${product}    decideEnv    ${evn}
+    ${ip}    evaluate    socket.gethostbyname(socket.gethostname())    socket
+    ${user}    evaluate    getpass.getuser()    getpass
+    ${server}    Run keyword if    '${ip}'=='172.16.8.76' or '${ip}'=='172.16.233.51'    set variable    True
+    ...    ELSE    set variable    False
+    Set Global Variable    ${IPADDRESS}    ${ip}
+    Set Global Variable    ${USERNAME}    ${user}
+    Set Global Variable    ${SERVER}    ${server}
+    Set Global Variable    ${PRODUCT}    ${product}
+//    Set Global Variable    ${notServer}    ${localConfig}
+    Set Global Variable    ${ENVIRONMENT}    ${evn}
+    Set Global Variable    ${Token}    e55kjx7QIpU%3d
+    Set Global Variable    ${Token2}    DYMPvdbivTk%3d
+    Set Global Variable    ${APIRESPONSE}    123
+    Set Global Variable    ${HOST}    ${evn}
+    Create Session    api    ${HOST}
+    #run keyword if    '${notServer}'!='true'    InitData    #新手礼包数据初始化
+    #${r}    queryNotCancelSessions
+    #run keyword if    ${r[0]}!=0 or ${r[1]}!=0 or ${r[2]}!=0    Fatal Error    有未取消的课程，请先检查\r\nCAL:${r[3]}\r\nMCR:${r[4]}\r\nCBR:${r[5]}
+    setEnvVariable    ${PRODUCT}
+
+Teardown
+    Delete All Sessions
+    #检查是否所有课程都取消
+    run keyword if    ${SERVER} and '${USERNAME}'=='qatestadmin'    queryNotCancelSessions
+
+InitData
+    [Documentation]    初始化新手礼包帐号的订课时间
+    updateAttendTime    &{Vjr_email}[year004_sn]
+    updateAttendTime    &{T_email}[year006_sn]
+    updateAttendTime    &{Tjr_email}[year004_sn]
+    updateAttendTime    &{Vjp_email}[year006_sn]
+    updateAttendTime    &{V_email}[year016_sn]
+    updateAttendTime    &{V_email}[super017_sn]

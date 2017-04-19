@@ -1,0 +1,40 @@
+*** Keywords ***
+Get
+    [Arguments]    ${TutorBrand}    ${MaterialSn}=
+    ${uri}    Set Variable    /class/Material/Data/Profile/Get
+    ${params}    Set Variable    Token=${Token}&Query={"TutorBrand":'${TutorBrand}',"MaterialSn":[${MaterialSn}]}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    Should Be Equal As Strings    ${resp.status_code}    200
+    ${ReturnData}    Set Variable    ${resp.content}
+    [Return]    ${ReturnData}
+
+GetMaterial_Template
+    [Arguments]    ${TutorBrand}    ${Table}    ${Status}
+    log    传入指定3组大人的教材编号，2組存在，1組不存在
+    #获取两笔教材编号
+    ${MaterialSn1}    getMaterial    ${TutorBrand}
+    ${MaterialSn2}    getMaterial    ${TutorBrand}    1
+    ${MaterialSn3}    Set Variable    10000000
+    ${MaterialSn}    Create List    ${MaterialSn1}    ${MaterialSn2}
+    Sort List    ${MaterialSn}
+    Get    ${TutorBrand}    ${MaterialSn1},${MaterialSn2},${MaterialSn3}
+    ${Success}    JsonUtil    Success
+    assertsOperation    ${Success}    =    true
+    ${num}    JsonLength    Result    2
+    Should be true    ${num}==2
+    #获取接口返回的教材编号
+    ${ReturnMaterialSn1}    JsonUtil    Result    MaterialSn
+    ${ReturnMaterialSn1}    Convert To Integer    ${ReturnMaterialSn1}
+    ${ReturnMaterialSn2}    JsonUtil    Result    MaterialSn    1
+    ${ReturnMaterialSn2}    Convert To Integer    ${ReturnMaterialSn2}
+    ${ReturnMaterialSn}    Create List    ${ReturnMaterialSn1}    ${ReturnMaterialSn2}
+    Sort List    ${ReturnMaterialSn}
+    should be true    ${MaterialSn}==${ReturnMaterialSn}
+    run keyword if    ${Status}==1    queryMaterialInfo    ${Table}    0
+    run keyword if    ${Status}==1    queryMaterialInfo    ${Table}    1
+    run keyword if    ${Status}==2    queryMaterialInfoJr    ${Table}    0
+    run keyword if    ${Status}==2    queryMaterialInfoJr    ${Table}    1
+    #验证第一笔返回教材是否来自V大
+    #queryMaterialInfo    ${Table}    0
+    #验证第二笔返回教材是否来自V大
+    #queryMaterialInfo    ${Table}    1

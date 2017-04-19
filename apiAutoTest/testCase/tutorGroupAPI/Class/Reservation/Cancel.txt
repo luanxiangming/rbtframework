@@ -1,0 +1,468 @@
+*** Settings ***
+Suite Setup       Setup
+Suite Teardown    Teardown
+Force Tags        tg    product
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/Get.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/GetInfo.txt
+Resource          ../../../../framework/init.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/reservation/Reserve.txt
+Resource          ../../../../keyWords/tutorGroupAPI/class/reservation/cancel.txt
+
+*** Test Cases ***
+Class_Reservation_Cancel_01_1_001
+    [Documentation]    大人年约取消存在的5分钟后讲堂课程-TutorABC,vipabc,vipabc Japan
+    [Tags]
+    [Template]    Cancel45CAL_Template
+    #TutorBrand    #ClientSn
+    2    &{V_email}[year025_sn]
+    1    &{T_email}[year002_sn]
+    8    &{Vjp_email}[year003_sn]
+
+Class_Reservation_Cancel_01_1_002
+    [Documentation]    大人年约取消存在的5分钟后讲堂课程-哥伦比亚帐号
+    [Tags]
+    [Template]
+    ${TutorBrand}    Set Variable    &{TutorBrand}[columbia]
+    ${ClientSn}    Set Variable    &{columbia}[email01_sn]
+    ${LobbySn}    Set Variable    96388
+    #添加订课记录
+    ${StartTimeBegin}    timeUtil    48
+    ${attend_date}    get substring    ${StartTimeBegin}    0    10
+    ${attend_sestime}    get substring    ${StartTimeBegin}    11    13
+    alterData    muchnewdb    insert client_attend_list values(${ClientSn},'${attend_date} 00:00:00',${attend_sestime},4,NULL,'2016-12-23 00:00:00',NULL,NULL,NULL,NULL,NULL,4,NULL,NULL,NULL,1,1,1,0,NULL,NULL,NULL,NULL,NULL,0,'220.133.213.214',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,${LobbySn},NULL,NULL,1,NULL,NULL)    #和小班课相比，多了special_sn
+    #取消订课
+    cancel    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    #检查接口返回结果
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${SessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.51.01"
+    #判断SessionFinishTime = SessionTime+45mins
+    ${SessionFinishTime_expect}    add time to date    ${ApiSessionTime}    00:45:00
+    should be true    '${SessionFinishTime}.000'=='${SessionFinishTime_expect}'
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #校验资料流
+    ${returnData}    queryDataSpecial    top 1 cal.special_sn,cal.attend_level,cal.attend_consultant,cal.attend_mtl_1,cal.attend_room,cal.session_sn,cal.valid    muchnewdb    client_attend_list AS cal    cal.client_sn = ${ClientSn} \ AND cal.attend_date = convert(datetime,'${attend_date}') \ AND cal.attend_sestime = ${attend_sestime} order by cal.sn desc
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${returnData[0][0]}==None
+    should be true    ${returnData[0][1]}==None
+    should be true    ${returnData[0][2]}==None
+    should be true    ${returnData[0][3]}==None
+    should be true    ${returnData[0][4]}==None
+    should be true    ${returnData[0][5]}==None
+    should be true    ${returnData[0][6]}==0
+
+Class_Reservation_Cancel_01_1_003
+    [Documentation]    tjr年约取消存在的5分钟后讲堂课程
+    [Tags]
+    [Template]
+    ${ClientSn}    set variable    &{Tjr_email}[year002_sn]
+    ${TutorBrand}    set variable    &{TutorBrand}[TutorABCJr]
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    2,3    45    1
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    #根据教材编号获取讲堂信息
+    cancel    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${SessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.51.01"
+    ${SessionFinishTime_expect}    add time to date    ${ApiSessionTime}    00:45:00
+    should be true    '${SessionFinishTime}.000'=='${SessionFinishTime_expect}'
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #校验资料流
+    ${returnData}    queryDataSpecial    top 1 special_sn,valid    ABCJR    customer_booking_record    client_sn = ${ClientSn} AND sdate \ = convert(datetime,'${attend_date}') \ AND stime \ = ${attend_sestime} \ order by inpdate desc
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${returnData[0][0]}==None
+    should be true    ${returnData[0][1]}==0
+    [Teardown]    cancel    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+
+Class_Reservation_Cancel_01_1_004
+    [Documentation]    vjr年约或超值取消存在的5分钟后讲堂课程
+    [Tags]
+    [Template]    Cancel45MCR_Template
+    #TutorBrand    ClientSn    LobbyBrand
+    #Vjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    2,3
+    #vipabcjr超值
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    2,3
+    #vipabc超值
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    1,3
+    #tutorabc超值
+    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]    1,3
+    #vipabcJp超值
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]    1,3
+    #tutorabcJr超值
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    2,3
+
+Class_Reservation_Cancel_01_2_005
+    [Documentation]    取消存在5分钟内开课的讲堂课程
+    ...    (已超过可取消时间)-TutorABC,vipabc,vipabc Japan,TutorABCJr,vipabcJr-年约,超值
+    ...
+    ...    TODO:
+    ...    需要准备很多专用测试帐号，需要消耗课堂数
+    [Tags]    debug    wait    stop
+    [Template]
+    #获取教材编号
+    ${LobbySn}    GetLobbysn    3    45    7
+    ${Sn_list}    get api response    Result,all,Sn
+    ${ApiStartTime_list}    get api response    Result,all,StartTime
+    ${StartTime}    Set Variable    ${ApiStartTime_list[0]}
+    #判断教材是否在10分钟内会开始,如果可能会开始,则换下一堂,以免订课时，已超过可预定时间
+    ${current_time}    get time
+    ${current_time}    add_time_to_date    ${current_time}    10 m
+    ${StartTime}    Run keyword if    '${current_time}'>'${StartTime}'    set variable    ${ApiStartTime_list[1]}
+    ...    ELSE    set variable    ${StartTime}
+    ${LobbySn}    Run keyword if    '${current_time}'>'${StartTime}'    set variable    ${Sn_list[1]}
+    ...    ELSE    set variable    ${Sn_list[0]}
+    #vipabc年约
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #vipabcjr年约
+    reserve    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #tutorabc年约
+    reserve    &{TutorBrand}[TutorABC]    &{T_email}[year004_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #vipabcJp年约
+    reserve    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #tutorabcJr年约
+    reserve    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #vipabc超值
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #vipabcjr超值
+    reserve    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #tutorabc超值
+    reserve    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #vipabcJp超值
+    reserve    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #tutorabcJr超值
+    reserve    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #等待至开课前4分钟
+    ${t1}    get time
+    ${t1}    add_time_to_date    ${t1}    -4 m
+    ${t2}    set variable    ${StartTime}
+    ${t3}    Subtract date From date    ${t2}    ${t1}
+    sleep    ${t3}
+    #取消订课
+    #vipabc年约
+    cancel    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #assertEqualValueByJsonArray    ReturnCode    "API.1.20.51.102.209.01"
+    #vipabcjr年约
+    cancel    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #tutorabc年约
+    cancel    &{TutorBrand}[TutorABC]    &{T_email}[year004_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #vipabcJp年约
+    cancel    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #tutorabcJr年约
+    cancel    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #vipabc超值
+    cancel    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #vipabcjr超值
+    cancel    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #tutorabc超值
+    cancel    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #vipabcJp超值
+    cancel    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    #tutorabcJr超值
+    cancel    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    ${LobbySn}
+    assertEqualValueByJsonArray    Success    false
+    #TearDown 再次取消所有订课
+    [Teardown]    Run Keywords    cancel    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[TutorABC]    &{T_email}[year004_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]    ${LobbySn}
+    ...    AND    cancel    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]    ${LobbySn}
+
+Class_Reservation_Cancel_01_2_006
+    [Documentation]    取消不存在的讲堂课程(未查询到订课记录)-TutorABC,vipabc,vipabc Japan,TutorABCJr,vipabcJr-年约,超值
+    [Tags]
+    [Template]    CancelNotExist45_Template
+    #TutorBrand    ClientSn    LobbyBrand
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]
+    #tutorabc年约
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]
+    #vipabcJp年约
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]
+    #vipabc超值
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]
+    #vipabcjr超值
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]
+    #tutorabc超值
+    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]
+    #vipabcJp超值
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]
+    #tutorabcJr超值
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]
+    #vipabc年约订10分钟快课
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]
+    #tutorabc年约订20分钟快课
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]
+    #vipabcJp年约订10分钟快课
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]
+    #vipabcJr年约订20分钟快课
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]
+    #tutorabcJr年约订20分钟快课
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]
+
+Class_Reservation_Cancel_02_1_001
+    [Documentation]    取消存在的5分钟后随选快课
+    [Tags]    debug
+    [Template]    Cancel10_20MCR_Template
+    #TutorBrand    ClientSn    LobbyBrand    PeriodMinutes
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    1,3    10
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    2,3    10
+    #tutorabc年约
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]    1,3    10
+    #vipabcJp年约
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]    1,3    10
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    2,3    10
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    1,3    20
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    2,3    20
+    #tutorabc年约
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]    1,3    20
+    #vipabcJp年约
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]    1,3    20
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    2,3    20
+
+Class_Reservation_Cancel_03_1_001
+    [Documentation]    大人年约提前取消存在的小班课程
+    [Tags]
+    [Template]    CancelRegularCAL_Template
+    #TutorBrand    ClientSn
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]
+    #tutorabc年约
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]
+    #vipabcJp年约
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]
+
+Class_Reservation_Cancel_03_1_002
+    [Documentation]    大人年约提前取消存在的小班课程-哥伦比亚
+    [Tags]
+    [Template]
+    #添加订课记录
+    ${StartTimeBegin}    timeUtil    48
+    ${attend_date}    get substring    ${StartTimeBegin}    0    10
+    ${attend_sestime}    get substring    ${StartTimeBegin}    11    13
+    alterData    muchnewdb    insert client_attend_list values(&{columbia}[email01_sn],'${attend_date} 00:00:00',${attend_sestime},4,NULL,'2016-12-23 00:00:00',NULL,NULL,NULL,NULL,NULL,4,NULL,NULL,NULL,1,1,1,0,NULL,NULL,NULL,NULL,NULL,0,'220.133.213.214',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,1,NULL,NULL)
+    #取消订课
+    ${headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded    Referer=${HOST}/Center/Profile/Index?
+    ${uri}    Set Variable    /class/reservation/cancel
+    ${params}    Create Dictionary    TutorBrand=&{TutorBrand}[columbia]    ClientSn=&{columbia}[email01_sn]    SessionTime=${StartTimeBegin}
+    ${params_list}    Create List    ${params}
+    ${params_json}    Dumps    ${params_list}
+    ${params_String}    Create Dictionary    Token=${Token}    data=${params_json}
+    ${resp}    Post Request    api    ${uri}    ${params_String}    headers=${headers}
+    #检查接口返回结果
+    ${returnData}    Decode    ${resp.content}
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${SessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.51.01"
+    #判断SessionFinishTime = SessionTime+45mins
+    ${SessionFinishTime_expect}    add time to date    ${ApiSessionTime}    00:45:00
+    should be true    '${SessionFinishTime}.000'=='${SessionFinishTime_expect}'
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #校验资料流
+    ${returnData}    queryDataSpecial    top 1 cal.special_sn,cal.attend_level,cal.attend_consultant,cal.attend_mtl_1,cal.attend_room,cal.session_sn,cal.valid    muchnewdb    client_attend_list AS cal    cal.client_sn = &{columbia}[email01_sn] \ AND cal.attend_date = convert(datetime,'${attend_date}') \ AND cal.attend_sestime = ${attend_sestime} order by cal.sn desc
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be true    ${returnData[0][0]}==None
+    should be true    ${returnData[0][1]}==None
+    should be true    ${returnData[0][2]}==None
+    should be true    ${returnData[0][3]}==None
+    should be true    ${returnData[0][4]}==None
+    should be true    ${returnData[0][5]}==None
+    should be true    ${returnData[0][6]}==0
+
+Class_Reservation_Cancel_03_1_003
+    [Documentation]    tjr年约提前取消存在的小班课程
+    [Tags]
+    [Template]
+    ${ClientSn}    set variable    &{Tjr_email}[year002_sn]
+    ${TutorBrand}    set variable    &{TutorBrand}[TutorABCJr]
+    ${SessionTime}    TimeUtil    26
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    6    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    #根据教材编号获取讲堂信息
+    cancel    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${SessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.51.01"
+    ${SessionFinishTime_expect}    add time to date    ${ApiSessionTime}    00:45:00
+    should be true    '${SessionFinishTime}.000'=='${SessionFinishTime_expect}'
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #校验资料流
+    ${returnData}    queryDataSpecial    top 1 special_sn,valid    ABCJR    customer_booking_record    client_sn = ${ClientSn} AND sdate \ = convert(datetime,'${attend_date}') \ AND stime \ = ${attend_sestime} \ order by inpdate desc
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${returnData[0][0]}==None
+    should be true    ${returnData[0][1]}==0
+    [Teardown]    cancel    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+Class_Reservation_Cancel_03_1_004
+    [Documentation]    vjr年约或超值提前取消存在的小班课程
+    [Tags]
+    [Template]    CancelRegularMCR_Template
+    #TutorBrand    ClientSn
+    #Vjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]
+    #vipabcjr超值
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]
+    #vipabc超值
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]
+    #tutorabc超值
+    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]
+    #vipabcJp超值
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]
+    #tutorabcJr超值
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]
+
+Class_Reservation_Cancel_03_1_005
+    [Documentation]    Special 1on1 策略取消
+    [Tags]
+    [Template]    CancelSpecial1on1_Template
+    #TutorBrand    ClientSn
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    REG-30    CAL
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    REG-30    MCR
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    REG-30    CBR
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]    REG-45    CAL
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]    REG-45    MCR
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]    REG-45    CBR
+
+Class_Reservation_Cancel_03_1_006
+    [Documentation]    取消存在5分钟内开课的小班课程    #小班课不方便等待到课前5分钟，需要等待的时间过长
+    ...    (已超过可取消时间)-TutorABC,vipabc,vipabc Japan,TutorABCJr,vipabcJr-年约,超值
+    ...
+    ...    TODO:
+    ...    需要等待太长时间，暂时不处理，再考虑。
+    [Tags]    debug    stop    wait
+    [Template]
+    ${SessionTime}    TimeUtil    26
+    #预订vipabc_年约
+    reserve    &{TutorBrand}[vipabc]    &{V_email}[year024_sn]    \    6    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    #等待至开课前4分钟
+    ${t1}    get time
+    ${t1}    add_time_to_date    ${t1}    -4 m
+    ${t2}    set variable    ${SessionTime}
+    ${t3}    Subtract date From date    ${t2}    ${t1}
+    sleep    ${t3}
+    #取消订课
+    cancel    &{TutorBrand}[vipabc]    &{V_email}[year024_sn]    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.51.102.209.01"
+
+Class_Reservation_Cancel_03_1_007
+    [Documentation]    取消不存在的小班课程(未查询到订课记录)-TutorABC,vipabc,vipabc Japan,TutorABCJr,vipabcJr-年约,超值
+    [Tags]
+    [Template]    CancelNotExistRegular_Template
+    #TutorBrand    ClientSn    LobbyBrand
+    #vipabc年约
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]
+    #vipabcjr年约
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]
+    #tutorabc年约
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]
+    #vipabcJp年约
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]
+    #tutorabcJr年约
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]
+    #vipabc超值
+    &{TutorBrand}[vipabc]    &{V_email}[super003_sn]
+    #vipabcjr超值
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[super002_sn]
+    #tutorabc超值
+    &{TutorBrand}[TutorABC]    &{T_email}[super003_sn]
+    #vipabcJp超值
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[super004_sn]
+    #tutorabcJr超值
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[super001_sn]
+    #vipabc年约订10分钟快课
+    &{TutorBrand}[vipabc]    &{V_email}[year025_sn]
+    #tutorabc年约订20分钟快课
+    &{TutorBrand}[TutorABC]    &{T_email}[year002_sn]
+    #vipabcJp年约订10分钟快课
+    &{TutorBrand}[vipabcJp]    &{Vjp_email}[year003_sn]
+    #vipabcJr年约订20分钟快课
+    &{TutorBrand}[vipabcJr]    &{Vjr_email}[year001_sn]
+    #tutorabcJr年约订20分钟快课
+    &{TutorBrand}[TutorABCJr]    &{Tjr_email}[year002_sn]
+
+test
+    CancelAll

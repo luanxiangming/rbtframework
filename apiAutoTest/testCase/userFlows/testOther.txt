@@ -1,0 +1,59 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg    debug
+Resource          ../../framework/Assertions.txt
+Resource          ../../framework/Utils.txt
+Resource          ../../keyWords/tutorGroupAPI/class/Lobby/Lobbysessions.txt
+Library           DateTime
+Resource          ../../framework/init.txt
+Resource          ../../keyWords/tutorGroupAPI/class/Material/Materials.txt
+Resource          ../../keyWords/AssertsOperation/AssertData/AssertData.txt
+Resource          ../../keyWords/tutorGroupAPI/customer/customer/Customer.txt
+Resource          ../../keyWords/tutorGroupAPI/class/reservation/cancel.txt
+
+*** Test Cases ***
+testJsonUtil
+    [Documentation]    [{"Success":true,"ReturnCode":null,"Message":null,"Result":[{"TutorBrand":2,"ClientSn":2599129,"Salt":"4E94AEA3F"}],"ServerName":"RD_CM01_172.16.8.151"}]
+    [Tags]    tg
+    ${r1}    JsonUtil    [{"Success":true,"ReturnCode":null,"Message":null,"Result":{"TutorBrand":2,"ClientSn":2599129,"Salt":"4E94AEA3F"},"ServerName":"RD_CM01_172.16.8.151"}]    Result    Salt
+    log    ${r1}
+
+test
+    [Tags]
+    #${p1}    lobbySessions    ALL1    45
+    #${p1}    set variable    {"Success":false,"Message":"Invalid JSON primitive: .","Result":{"Query":"{\"ClientSn\":[000]}"}}
+    #${s1}    debug    ${p1}
+    #${s2}    To json    ${s1}
+    #${r1}    queryMaterial
+    #${r1}    GetMaterial
+    #${r1}    queryMaterialInfo
+    #${r2}    JsonUtil    ${r1}    Result    Sn
+    ${r2}    set variable    -9--8-
+    ${returnData}    queryMaterial    115417
+    log    ${r2[0][0]}
+    ${r1}    remove data sign    ${r2[0][0]}
+    should be true    [8,9]==${r1}
+
+test1
+    [Tags]
+    #${p1}    lobbySessions    ALL1    45
+    #${s1}    debug    ${p1}
+    #${s2}    To json    ${s1}
+    #${r1}    queryMaterial
+    #${r1}    GetMaterial
+    #RunkeywordAssertData    debug
+    #tg_Login_Simple    vipabc    &{V_email}[year025]    &{password}[pwd1]    172.16.8.76
+    ${TutorBrand}    Set Variable    vipabc
+    #获取两笔教材编号
+    ${MaterialSn1}    getMaterial    ${TutorBrand}
+    ${MaterialSn2}    getMaterial    ${TutorBrand}    1
+    ${MaterialSn3}    Set Variable    10000000
+    ${MaterialSn}    Create List    ${MaterialSn1}    ${MaterialSn2}
+    Sort List    ${MaterialSn}
+    Get    ${TutorBrand}    ${MaterialSn1},${MaterialSn2},${MaterialSn3}
+    #${Success}    JsonUtil    Success
+    ${r1}    get api response
+    log    ${r1}
+
+cancelAll
+    cancelall    2    2599124

@@ -1,0 +1,169 @@
+*** Settings ***
+Suite Setup       Setup
+Suite Teardown    Teardown
+Force Tags        tg
+Default Tags
+Resource          ../../../keyWords/tutorGroupAPI/customer/customer/Customer.txt
+Resource          ../../../framework/init.txt
+Resource          ../../../keyWords/AssertsOperation/AssertData/AssertData.txt
+
+*** Test Cases ***
+Customer_Login_01_1_001
+    [Documentation]    ${TutorBrand} | ${Email} | ${Password} | ${IpAddress} | ${client_Sn} | ${operation} | ${r_salt}
+    [Tags]    high
+    [Setup]
+    [Template]    tg_Ligin_Template
+    #TutorBrand    Email    Password    IpAddress    client_Sn    Operation    r_salt
+    #vipabc帐号登录
+    2    &{V_email}[year025]    &{password}[pwd1]    172.16.8.76    &{V_email}[year025_sn]    !=    null
+    #tutorabc帐号登录
+    1    &{T_email}[year002]    &{password}[pwd1]    172.16.8.76    &{T_email}[year002_sn]    !=    null
+    #vipabcjr帐号登录
+    4    &{Vjr_email}[year001]    &{password}[pwd1]    172.16.8.76    &{Vjr_email}[year001_sn]    !=    null
+    #vipabcJp帐号登录
+    8    &{Vjp_email}[year003]    &{password}[pwd1]    172.16.8.76    &{Vjp_email}[year003_sn]    !=    null
+    #tutorabcJr帐号登录
+    [Teardown]
+
+Customer_Login_01_1_002
+    [Documentation]    ${TutorBrand} | ${Email} | ${Password} | ${IpAddress} | ${client_Sn} | ${operation} | ${r_salt}
+    [Tags]    high
+    [Setup]
+    [Template]
+    ${TutorBrand}    setVariable    3
+    tg_Login_Simple    ${TutorBrand}    &{Tjr_email}[year002]    &{password}[pwd1]    172.16.8.76    &{Tjr_email}[year002_sn]
+    assertEqualValueByJson    Success    true
+    assertApiResponse    Result,ClientSn    =    &{Tjr_email}[year002_sn]
+    assertApiResponse    Result,TutorBrand    =    ${TutorBrand}
+    assertApiResponse    Result,Salt    =    null
+    [Teardown]
+
+Customer_Login_01_1_003
+    [Tags]    middle
+    [Setup]
+    tg_Login_Simple    tutorabc    &{T_email}[year002]    wrongPassword
+    assertApiResponse    Success    =    false
+    assertApiResponse    ServerName    =    null
+    assertApiResponse    ReturnCode    "API.5.03"
+    assertApiResponse    Result,ClientSn    =    0
+
+Customer_Login_01_2_004
+    [Tags]    middle
+    [Setup]
+    #vipabc品牌
+    tg_Login_Simple    vipabc    &{V_email}[year022]    &{password}[pwd1]
+    assertApiResponse    Success    =    false
+    assertApiResponse    ReturnCode    "API.5.03"
+    assertApiResponse    Result,ClientSn    =    0
+    #tutorabcjr品牌    &{Tjr_email}
+    tg_Login_Simple    tutorabcjr    &{Tjr_email}[year005]    &{password}[pwd1]
+    assertApiResponse    Success    =    false
+    assertApiResponse    ReturnCode    "API.5.03"
+    assertApiResponse    Result,ClientSn    =    0
+
+Customer_Login_01_3_005
+    [Tags]    middle
+    [Setup]
+    #Email不存在
+    tg_Login_Simple    vipabc    wrongEmailAddress    wrongPassword
+    assertApiResponse    Success    =    false
+    assertApiResponse    ReturnCode    "API.5.01"
+    #Eamil和Brand不匹配
+    tg_Login_Simple    vipabc    &{T_email}[year002]    wrongPassword
+    assertApiResponse    Success    =    false
+    assertApiResponse    ReturnCode    "API.5.01"
+
+Customer_Login_01_2_006
+    [Documentation]    TODO    #会发短信通知到17091357502
+    ...    是贵宾且异常的帐号会发短信通知
+    ...
+    ...    目前无法自动验证，需要手动验证
+    [Tags]    manual    middle    debug
+    [Setup]
+    tg_Login    vipabc    &{V_email}[year026]    &{password}[pwd1]
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{V_email}[year026_sn]
+
+Customer_Login_01_2_007
+    [Documentation]    TODO    #会发短信通知到17091357502
+    ...    是贵宾且异常的帐号会发短信通知
+    ...
+    ...    目前无法自动验证，需要手动验证
+    [Tags]    manual    middle
+    [Setup]
+    tg_Login    vipabc    &{V_email}[year027]    &{password}[pwd1]
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{V_email}[year027_sn]
+
+Customer_Login_02_1_001
+    [Documentation]    说明：
+    ...    Password+Salt，透過Sha1加密
+    ...    Tjr例外，直接Password进行tree3加密
+    ...
+    ...    sha1(qatest123705757062)=D0C01F2D9271D2ACE113D9178DF52B8606903FBD
+    ...
+    ...    request eg：
+    ...    http://stageapi.vipabc.com/TutorGroup.Api/Customer/Login?Token=e55kjx7QIpU%3d&Query={%22TutorBrand%22:%22tutorabcjr%22,%22Email%22:%22qatestapi004@tutorabcjr.com%22,%22Password%22:%22qatest123%22,%22IsFromIms%22:false,%22IpAddress%22:%22172.16.8.76%22}
+    [Tags]    middle
+    [Setup]
+    #vipabc品牌
+    ${V_security}    run keyword if    ${product}    set variable    1111
+    ...    ELSE    set variable    D0C01F2D9271D2ACE113D9178DF52B8606903FBD
+    tg_Login    vipabc    &{V_email}[year025]    \    ${EMPTY}    ${V_security}    ${EMPTY}
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{V_email}[year025_sn]    &{V_email}[year025_sn]
+    assertApiResponse    Result,TutorBrand    =    2    2
+    assertApiResponse    Result,Salt    !=    null
+    #tutorabc品牌
+    tg_Login    tutorabc    &{T_email}[year002]    \    ${EMPTY}    FCE4238A7A94FA764C726E5CFE1C18CC5722AC8B    ${EMPTY}
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{T_email}[year002_sn]
+    assertApiResponse    Result,TutorBrand    =    1
+    assertApiResponse    Result,Salt    !=    null
+    #vipabcjr品牌
+    tg_Login    vipabcjr    &{Vjr_email}[year001]    \    ${EMPTY}    9A77B74EAC8161B75B1BA0FA281F5F5D70063F41    ${EMPTY}
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{Vjr_email}[year001_sn]
+    assertApiResponse    Result,TutorBrand    =    4
+    assertApiResponse    Result,Salt    !=    null
+    #tutorabcjr品牌
+    tg_Login    tutorabcjr    &{Tjr_email}[year002]    \    ${EMPTY}    xFGdlQQJzMkU==wNHdxQ    ${EMPTY}
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{Tjr_email}[year002_sn]
+    assertApiResponse    Result,TutorBrand    =    3
+    assertApiResponse    Result,Salt    =    null
+    #vipabcjp品牌
+    tg_Login    japan    &{Vjp_email}[year003]    \    ${EMPTY}    1376D2629034AFCCF615EA828CDAAD16FA8ACF6F    ${EMPTY}
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{Vjp_email}[year003_sn]
+    assertApiResponse    Result,TutorBrand    =    8
+    assertApiResponse    Result,Salt    !=    null
+
+Customer_Login_02_2_002
+    [Documentation]    Email+Salt，透過Sha1加密
+    ...
+    ...    SHa1(qatestapi025@vipabcde.com705757062)=8D0B7814A5CA57D75B832EE7D2CBDD9217292752
+    [Tags]    middle
+    [Setup]
+    tg_Login    vipabc    &{V_email}[year025]    \    8D0B7814A5CA57D75B832EE7D2CBDD9217292752    ${EMPTY}    ${EMPTY}
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{V_email}[year025_sn]
+    assertApiResponse    Result,TutorBrand    =    2
+    assertApiResponse    Result,Salt    !=    0
+
+Customer_Login_02_2_003
+    [Documentation]    ClientSn 2599124，透過Tree3加密
+    [Tags]    middle
+    [Setup]
+    tg_Login    vipabc    &{V_email}[year025]    \    ${EMPTY}    ${EMPTY}    jM1kEUyQkU=MTOxQ
+    ...    true
+    assertApiResponse    Success    =    true
+    assertApiResponse    Result,ClientSn    =    &{V_email}[year025_sn]
+    assertApiResponse    Result,TutorBrand    =    2
+    assertApiResponse    Result,Salt    !=    0

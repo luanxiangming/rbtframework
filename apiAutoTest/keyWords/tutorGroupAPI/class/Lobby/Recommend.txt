@@ -1,0 +1,8 @@
+*** Keywords ***
+Recommend
+    [Arguments]    ${TutorBrand}=    ${ClientSn}=    ${BaseTime}=
+    [Documentation]    TutorBrand、ClientSn、BaseTime
+    ${uri}    Set Variable    /class/lobby/RecommendLobbySessions
+    ${params}    Set Variable    Token=${Token}&Query={TutorBrand:${TutorBrand},ClientSn:[${ClientSn}],BaseTime:"${BaseTime}"}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    Should Be Equal As Strings    ${resp.status_code}    200

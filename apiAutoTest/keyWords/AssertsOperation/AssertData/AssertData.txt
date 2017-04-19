@@ -1,0 +1,29 @@
+*** Keywords ***
+assertMaterial
+    [Arguments]    ${dbData}
+    [Tags]    dbkey
+    log    APIDATA:${apiData}
+    log    DBDATA:${dbData}
+    #get api data
+    ${MaterialSn_1}    JsonUtil    Result    MaterialSn
+    ${sn}    JsonUtil    Result    Sn
+    ${TitleEn}    JsonUtil    Result    TitleEn
+    ${DescriptionEn}    JsonUtil    Result    DescriptionEn
+    ${Levels}    JsonUtil    Result    Levels
+    ${Topics}    JsonUtil    Result    Topics
+    #get db data
+    ${Levels_db}    remove data sign    ${dbData[0][2]}
+    #asserts
+    should be true    ${Levels}==${Levels_db}
+
+assertPasswordInput
+    [Arguments]    ${path}    ${operation}    @{value}
+    [Tags]    dbkey
+    log    KEYWORDNAME:assertPasswordInput
+    log    DBDATA:${dbData}
+    #get db data
+    ${password_db}    set variable    ${dbData[0][0]}
+    ${client_ip}    set variable    ${dbData[0][1]}
+    #asserts
+    should be true    '@{values}[0]'=='${password_db}'
+    should be true    '@{values}[1]'=='${client_ip}'

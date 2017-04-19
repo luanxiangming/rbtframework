@@ -1,0 +1,37 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/GetInfo.txt
+Resource          ../../../../framework/init.txt
+
+*** Test Cases ***
+Class_Lobby_Data_Profile_GetInfo_01_1_001
+    [Documentation]    传入指定1组講堂编号
+    log    传入指定1组講堂编号
+    GetInfo    [79824]
+    assertApiResponse    Success    =    true
+    ${JrMaterialSn}    get api response    Result,0,JrMaterialSn
+    ${TypeExpendSn}    get api response    Result,0,TypeExpend,Sn
+    ${ConsultantDataProfileExpendSn}    get api response    Result,0,ConsultantDataProfileExpend,Sn
+    ${TypeNameZhTw_Api}    get api response    Result,0,TypeExpend,TypeName,ZhTw
+    ${TypeNameZhCn_Api}    get api response    Result,0,TypeExpend,TypeName,ZhCn
+    ${TypeNameEnUs_Api}    get api response    Result,0,TypeExpend,TypeName,EnUs
+    ${TypeNameJa_Api}    get api response    Result,0,TypeExpend,TypeName,Ja
+    #检验TypeExpend
+    queryDataSpecial    type_name,type_name_cn,type_name_jp    muchnewdb    lobby_session_type    sn=101
+    ${DbTypeNameEnUs_list}    Get Db Datas    0,0    -
+    ${DbTypeNameZhTw_list}    Get Db Datas    0,0    -    1
+    ${DbTypeNameZhCn_list}    Get Db Datas    0,1    -    1
+    ${DbTypeNameJa_list}    Get Db Datas    0,2    -    1
+    ${DbTypeNameEnUs}    strip String    ${DbTypeNameEnUs_list[0]}
+    ${DbTypeNameZhTw}    strip String    ${DbTypeNameZhTw_list[0]}
+    ${DbTypeNameZhCn}    strip String    ${DbTypeNameZhCn_list[0]}
+    ${DbTypeNameJa}    strip String    ${DbTypeNameJa_list[0]}
+    ${TypeNameZhTw_Api}    To Json    ${TypeNameZhTw_Api}
+    ${TypeNameZhCn_Api}    To Json    ${TypeNameZhCn_Api}
+    ${TypeNameEnUs_Api}    To Json    ${TypeNameEnUs_Api}
+    ${TypeNameJa_Api}    To Json    ${TypeNameJa_Api}
+    should be equal as strings    ${TypeNameZhTw_Api}    ${DbTypeNameZhTw}
+    #should be equal as strings    ${TypeNameZhCn_Api}    ${DbTypeNameZhCn}
+    #should be equal as strings    ${TypeNameEnUs_Api}    ${DbTypeNameEnUs}
+    #should be equal as strings    ${TypeNameJa_Api}    ${DbTypeNameJa}

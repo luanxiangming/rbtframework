@@ -1,0 +1,10 @@
+*** Keywords ***
+GetInfo
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${TypeSn}
+    ${uri}    Set Variable    /class/Material/Setting/Plan/GetInfo
+    ${params}    Create Dictionary    TutorBrand=${TutorBrand}    ClientSn=${ClientSn}    TypeSn=${TypeSn}
+    ${params_json}    Dumps    ${params}
+    ${params}    Set Variable    Token=${Token}&Query=${params_json}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    [Return]    ${ReturnData}

@@ -1,0 +1,34 @@
+*** Settings ***
+
+*** Variables ***
+
+*** Keywords ***
+getWordBank
+    [Tags]    apitest
+    ${uri}    Set Variable    /Center/WordBank/MemberWordBank
+    ${params}    Create Dictionary    displayMode=Desktop    area=''
+    ${resp}    Get request    api    ${uri}?displayMode=Desktop
+    log    ${resp.content}
+    ${returnData}    Set Variable    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+    [Return]    ${returnData}
+
+registTest
+    ${txt_email_addr}    set variable    qatestapi003@vipabc.com
+    ${pwd_passwd}    set variable    qatest123
+    ${pwd_passwd_retry}    set variable    qatest123
+    ${txt_cname}    set variable    接口测试零零三
+    ${txt_ename}
+    ${hdn_score}    set variable    regist
+    ${email}    set variable    qatestapi003@vipabc.com
+    ${password}    set variable    qatest123
+    ${password2}    set variable    qatest123
+    ${text_name}    set variable    接口测试零零三
+    ${chk_gender}    set variable    1
+    ${age_area}    set variable    11
+    ${txt_phone_nationcode}    set variable    86
+    ${txt_cphone}    set variable    15555555003
+    ${rad_know_abc}    set variable    217061
+    ${validateCaptchaCode}    set variable    a421
+    ${accept_agree}    set variable    on
+    ${param}    create dictionary    txt_email_addr=${txt_email_addr}

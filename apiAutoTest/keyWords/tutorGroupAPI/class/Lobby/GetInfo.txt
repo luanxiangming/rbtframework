@@ -1,0 +1,7 @@
+*** Keywords ***
+GetInfo
+    [Arguments]    ${LobbySn}=
+    ${uri}    Set Variable    /class/lobby/Data/Profile/GetInfo
+    ${params}    Set Variable    Token=${Token}&Query={Sn:${LobbySn}}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    Should Be Equal As Strings    ${resp.status_code}    200

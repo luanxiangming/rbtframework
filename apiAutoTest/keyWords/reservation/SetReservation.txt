@@ -1,0 +1,32 @@
+*** Settings ***
+
+*** Variables ***
+
+*** Keywords ***
+setReservation
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${SessionTime}    ${Max}    ${IsTestMode}
+    [Tags]    apitest
+    ${headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded    Referer=${HOST}/Center/Profile/Index?
+    ${uri}    Set Variable    /class/reservation/reserve
+    ${params}    Create Dictionary    TutorBrand=${TutorBrand}    ClientSn=${ClientSn}    SessionTime=${SessionTime}    Max=${Max}    IsTestMode=${IsTestMode}
+    ${params_list}    Create List    ${params}
+    ${params_json}    Dumps    ${params_list}
+    ${params_String}    Create Dictionary    Token=${Token}    data=${params_json}
+    ${resp}    Post Request    api    ${uri}    ${params_String}    headers=${headers}
+    #log    LOGINFO:CONTENT||${resp.content}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+    [Return]    ${returnData}
+
+tg_reserve
+    [Documentation]    Content-Type=application/x-www-form-urlencoded
+    ${headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded
+    ${uri}    Set Variable    /class/reservation/reserve
+    ${params}    Create Dictionary    TutorBrand=TutorAbcJr    ClientSn=105845    LobbySn=81240
+    ${params_list}    Create List    ${params}
+    ${params_json}    Dumps    ${params_list}
+    ${params_String}    Create Dictionary    token=${token}    data=${params_json}
+    ${resp}    Post Request    api    ${uri}    ${params_String}    headers=${headers}
+    #log    LOGINFO:CONTENT||${resp.content}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200

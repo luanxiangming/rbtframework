@@ -1,0 +1,13 @@
+*** Settings ***
+
+*** Variables ***
+
+*** Keywords ***
+reservationQuicklySession
+    [Arguments]    ${ClassType}    ${Reservation}    ${SessionSn}    ${IsTestMode}
+    ${headers}    Create Dictionary    Content-Type=application/json; charset=UTF-8    Referer=http://www.vipabc.com/Center/Profile/Index?
+    ${uri}    Set Variable    /Center/Reservation/QuciklySessionReservation
+    ${SessionSn_list}    Create List    ${SessionSn}
+    ${params}    Create dictionary    ClassType=${ClassType}    Reservation=${Reservation}    SessionSn=${SessionSn_list}    IsTestMode=${IsTestMode}
+    ${resp}    Post Request    api    ${uri}    ${params}    headers=${headers}
+    ${resp_ecode}    Evaluate    '${resp.content}'.decode('utf-8')

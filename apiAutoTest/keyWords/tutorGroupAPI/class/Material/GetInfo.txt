@@ -1,0 +1,9 @@
+*** Keywords ***
+GetInfo
+    [Arguments]    ${TutorBrand}    ${MaterialSn}=
+    ${uri}    Set Variable    /class/Material/Data/Profile/GetInfo
+    ${params}    Set Variable    Token=${Token}&Query={"TutorBrand":'${TutorBrand}',"MaterialSn":[${MaterialSn}]}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${ReturnData}    Set Variable    ${resp.content}
+    [Return]    ${ReturnData}

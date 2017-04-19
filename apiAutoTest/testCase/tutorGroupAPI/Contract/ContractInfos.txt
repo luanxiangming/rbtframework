@@ -1,0 +1,12 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../keyWords/tutorGroupAPI/Contract/ContractInfos.txt
+Resource          ../../../framework/init.txt
+
+*** Test Cases ***
+查询剩余课堂数
+    [Documentation]    &{V_email}[year025_sn]
+    [Tags]    debug
+    #${returnData}    ContractInfos    vipabc    [&{V_email}[year025_sn]]
+    getAvailableSessions    vipabc    [&{V_email}[year025_sn]]

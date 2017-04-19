@@ -1,0 +1,55 @@
+*** Settings ***
+
+*** Keywords ***
+queryReservationInformation
+    [Tags]    apitest
+    ${uri}    Set Variable    /Center/ClientHelper2/ReservationInformation
+    ${resp}    Get Request    api    ${uri}
+    log    LOGINFO:CONTENT||${resp.content}
+    ${resp_string}    Convert To String    ${resp.content}
+    Should Contain    ${resp_string}    8005
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+queryLobbySession
+    [Arguments]    ${type}    ${isSettingCondition}    ${queryDate}
+    [Tags]    apitest
+    #${headers}    create Dictionary    Content-Type=application/x-www-form-urlencoded
+    ${uri}    Set Variable    /Center/Reservation/ReservationPartial
+    ${params}    Create Dictionary    type=${type}    isSettingCondition=${isSettingCondition}    queryDate=${queryDate}
+    ${resp}    Get Request    api    ${uri}    \    ${params}
+    log    打印日志content:${resp.content}
+    ${content_string}    convert to string    ${resp.content}
+    ${xml}    parse xml    ${content_string}
+    log    xml::::${xml}
+    ${element}    Get Element    ${xml}    input[@id='leaveSession']
+    log    element:::${element}
+    Should Contain    ${resp.content}    OK
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+queryClass1v1
+
+queryClassSmall
+
+querySessions
+
+testxml
+    [Documentation]    <testcase>
+    ...    <test id="1" >test1</test>
+    ...    <test id="2" >test2</test>
+    ...    <test id="3" >test3</test>
+    ...    </testcase>
+    ${xml}    parse xml    <test id="1" >test1</test> <test id="2" >test2</test> <test id="3" >test3</test>
+    log    ${xml}
+    ${element}    Get Element text    ${xml}    test[@id='1']
+    log    ${element}
+    log    LOGINFO:CONTENT||${resp.content}
+    ${resp_string}    Convert To String    ${resp.content}
+    Should Contain    ${resp_string}    8005
+    Should Be Equal As Strings    ${resp.status_code}    200
+    #log    LOGINFO:CONTENT||${resp.content}
+    ${data}    To Json    ${resp.content}
+    #Should Contain    ${resp_string}    8005
+    #Should Be Equal As Strings    ${resp.status_code}    200
+    #log    ${data["ClientSession"]}
+    ${ClientSession}    Set Variable    ${data["ClientSession"]}
+    [Return]    ${ClientSession}

@@ -1,0 +1,50 @@
+*** Settings ***
+Resource          Utils.txt
+
+*** Keywords ***
+queryData
+    [Arguments]    ${DataBase}=    ${DB_table}=    ${DB_where}=
+    ConMsSql    ${DataBase}
+    ${SQL}    set variable    select top 100 * from ${DB_table} with(nolock) where ${DB_where}
+    ${returnData}    query    ${SQL}
+    log    DBDATA：${returnData}
+    #${returnString}    Convert to string    ${returnData[0]}
+    #${returnData}    Get SubString    ${returnString}
+    [Return]    ${returnData}
+
+alterData
+    [Arguments]    ${DataBase}    ${sql}
+    ConMsSql    ${DataBase}
+    ${returnData}    Execute Sql String    ${sql}
+    log    ===DATA_UPDATE_SUCCESS!
+    [Return]    ${returnData}
+
+queryCount
+    [Arguments]    ${DataBase}=    ${DB_table}=    ${DB_where}=
+    ConMsSql    ${DataBase}
+    ${returnCount}    query    select count(*) as num \ from ${DB_table} with(nolock) where ${DB_where}
+    ${returnString}    Convert to string    ${returnCount[0]}
+    ${returnData}    Get SubString    ${returnString}    1    2
+    [Return]    ${returnData}
+
+queryDataSpecial
+    [Arguments]    ${Column}    ${DataBase}=    ${DB_table}=    ${DB_where}=
+    ConMsSql    ${DataBase}
+    ${SQL}    set variable    select ${Column} from ${DB_table} where ${DB_where}
+    log    ${SQL}
+    log    ${SQL}
+    ${current_user}    query    SELECT system_user
+    log    数据库当前连接用户：${current_user}
+    ${returnData}    query    ${SQL}
+    log    DBDATA:${returnData}
+    #${returnString}    Convert to string    ${returnData[0]}
+    #${returnData}    Get SubString    ${returnString}
+    [Return]    ${returnData}
+
+queryCustom
+    [Arguments]    ${SQL}
+    ConMsSql
+    log    ${SQL}
+    ${returnData}    query    ${SQL}
+    log    DBDATA:${returnData}
+    [Return]    ${returnData}

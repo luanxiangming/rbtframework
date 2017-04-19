@@ -1,0 +1,162 @@
+*** Settings ***
+Resource          ../../framework/DbOperation.txt
+
+*** Keywords ***
+queryClientBasic
+    [Arguments]    ${ClientSn}
+    [Tags]    dbkey
+    ${returnData}    Run keyword if    ${SERVER}    queryData    client_basic    sn= ${ClientSn}
+    log    ${returnData}
+    [Return]    ${returnData}
+
+updateAttendTime
+    [Arguments]    ${client_sn}
+    [Documentation]    UPDATE client_attend_list SET attend_datetime = GETDATE() WHERE attend_datetime \ < DATEADD(DAY,-1,GETDATE()) AND client_sn =${client_sn}
+    ...
+    ...    把订课时间在当前时间之前1天的课程修改为当前时间
+    ...
+    ...    注意：操作数据库方法，慎用！！
+    [Tags]    dbkey
+    should be true    '${client_sn}'!=''
+    log    ===start update attend_datetime for:${client_sn}
+    Run keyword if    '${HOST}'=='http://stageapi.vipabc.com/TutorGroup.Api'    alterData    muchnewdb    UPDATE muchnewdb.dbo.client_attend_list SET attend_datetime = GETDATE() WHERE attend_datetime \ < DATEADD(DAY,-1,GETDATE()) AND client_sn =${client_sn}
+    ...    ELSE    log    非stage环境不能执行update操作！！
+
+queryPasswordInput
+    [Arguments]    ${ClientSn}
+    [Documentation]    select top 10 * from dbo.client_password_input WITH(NOLOCK) WHERE client_sn = ''
+    ...
+    ...    验证登录后IP地址写入
+    [Tags]    dbkey
+    ${returnData}    Run keyword if    ${SERVER}    queryDataSpecial    top 1 password,client_ip    muchnewdb    client_password_input
+    ...    client_sn= '${ClientSn}' ORDER BY indate desc
+    [Return]    ${returnData}
+
+queryClientAttendList
+    [Arguments]    ${client_sn}    ${SessionTime}    ${attend_livesession_types}    ${valid}
+    [Tags]    dbkey
+    ${attend_date}    Get SubString    ${SessionTime}    0    10
+    ${t1}    Convert Date    ${SessionTime}    datetime
+    ${attend_sestime}    Set Variable    ${t1.hour}
+    ${returnData}    queryCount    muchnewdb    client_attend_list    client_sn=${ClientSn} and attend_date='${attend_date}' and attend_sestime=${attend_sestime} and attend_livesession_types=${attend_livesession_types} and valid=${valid}
+    [Return]    ${returnData}
+
+queryMaterialInfo
+    [Arguments]    ${Table}    ${Index}=
+    [Tags]    dbkey
+    #大人专用
+    #接口返回值
+    ${ApiMaterialSn}    JsonUtilTwo    Result    MaterialSn    ${Index}
+    ${ApiTitle}    JsonUtilTwo    Result    Title    ${Index}
+    ${ApiLevels}    JsonUtilTwo    Result    Levels    ${Index}
+    ${ApiTopics}    JsonUtilTwo    Result    Topics    ${Index}
+    ${ApiTitle}    Get From Dictionary    ${ApiTitle}    en-US
+    ${ApiTitle}    Remove Json Sign    ${ApiTitle}
+    #获取DB返回值
+    ${DbData}    queryDataSpecial    ltitle,ll,ltopic    muchnewdb    ${Table}    course=${ApiMaterialSn}
+    ${len}    Get Length    ${DbData[0][1]}
+    ${DbLevels}    run keyword if    ${len}!=0    Remove Data Sign    ${DbData[0][1]}
+    ...    ELSE    Set Variable    []
+    ${len}    Get Length    ${DbData[0][2]}
+    ${DbTopic}    run keyword if    ${len}!=0    Remove Data Sign    ${DbData[0][2]}
+    ...    ELSE    Set Variable    []
+    ${DbTitle}    Remove Json Sign    ${DbData[0][0]}
+    should be true    ${ApiLevels}==${DbLevels}
+    should be true    "${ApiTitle}"=="${DbTitle}"
+    should be true    ${ApiTopics}==${DbTopic}
+
+queryMaterialInfoJr
+    [Arguments]    ${Table}    ${Index}=
+    [Tags]    dbkey
+    #小孩专用
+    #接口返回值
+    ${ApiMaterialSn}    JsonUtilTwo    Result    MaterialSn    ${Index}
+    ${ApiTitle}    JsonUtilTwo    Result    Title    ${Index}
+    ${ApiLevels}    JsonUtilTwo    Result    Levels    ${Index}
+    ${ApiLessonTypes}    JsonUtilTwo    Result    LessonTypes    ${Index}
+    ${ApiTitle}    Get From Dictionary    ${ApiTitle}    en-US
+    ${ApiTitle}    Remove Json Sign    ${ApiTitle}
+    #获取DB返回值(title)
+    ${DbData}    queryDataSpecial    title    ABCJR    ${Table}    course=${ApiMaterialSn}
+    ${DbTitle}    Remove Json Sign    ${DbData[0][0]}
+    should be true    "${ApiTitle}"=="${DbTitle}"
+    #获取DB返回值(lev)
+    ${DbData2}    queryDataSpecial    lev    ABCJR    lesson_level_Temp    course=${ApiMaterialSn} order by \ lev
+    ${num}    Get Length    ${DbData2}
+    ${DbLevels}    Create List
+    : FOR    ${i}    IN RANGE    ${num}
+    \    Append To List    ${DbLevels}    ${DbData2[${i}][0]}
+    should be true    ${ApiLevels}==${DbLevels}
+    #获取DB返回值(value)
+    ${DbData3}    queryDataSpecial    value    ABCJR    lesson_type_Temp    course=${ApiMaterialSn} order by \ value
+    ${num}    Get Length    ${DbData3}
+    ${DbTopics}    Create List
+    : FOR    ${i}    IN RANGE    ${num}
+    \    Append To List    ${DbTopics}    ${DbData3[${i}][0]}
+    should be true    ${ApiLessonTypes}==${DbTopics}
+
+queryMaterial
+    [Arguments]    ${MaterialSn}
+    [Documentation]    Run keyword if ${SERVER}
+    [Tags]    dbkey
+    ${returnData}    Run keyword if    ${SERVER}    queryDataSpecial    sn\,course\,ll\,li    muchnewdb    Material
+    ...    course=${MaterialSn}
+    [Return]    ${returnData}
+
+queryMaterialScore
+    [Arguments]    ${Table}    ${Index}=
+    [Tags]    dbkey
+    #验证教材评分专用
+    #接口返回值
+    ${ApiMaterialSn}    JsonUtilTwo    Result    MaterialSn    ${Index}
+    ${ApiEvaluationScore}    JsonUtilTwo    Result    EvaluationScore    ${Index}
+    #获取DB返回值
+    ${DbData}    queryDataSpecial    count(*) ,SUM(OverallaverageScore)    TutorSummary    ${Table}    CrsType IN (2,4) AND CrsObjectSn='${ApiMaterialSn}'
+    ${DbEvaluationScore1}    run keyword if    ${DbData[0][0]}!=0    Evaluate    ${DbData[0][1]}/${DbData[0][0]}
+    ${DbEvaluationScore2}    run keyword if    ${DbData[0][0]}!=0    Convert To Number    ${DbEvaluationScore1}1    1
+    ${DbEvaluationScore}    run keyword if    ${DbData[0][0]}==0    Set Variable    0.0
+    ...    ELSE    Set Variable    ${DbEvaluationScore2}
+    should be true    ${ApiEvaluationScore}==${DbEvaluationScore}
+
+queryLobby_session_BASIC
+    [Arguments]    ${ColumnOther}=None    ${where}=
+    [Tags]    dbkey
+    ${Column_1}    set variable    sn
+    ${Column_2}    set variable    consultant
+    ${Column_3}    set variable    session_date
+    ${Columns}    set variable    ${Column_1} ,${Column_2} ,${Column_3}
+    log    ${Columns}
+    ${Columns}    Run keyword if    '${ColumnOther}'=='None'    set variable    ${Columns}
+    ...    ELSE    set variable    ${ColumnOther} ${Columns}
+    ${returnData}    Run keyword if    ${SERVER}    queryDataSpecial    ${Columns}    muchnewdb    lobby_session
+    ...    ${where}
+    log    ${returnData}
+    [Return]    ${returnData}
+
+queryLobby_session_RecommendLobbySessions
+    [Tags]    dbkey
+    queryLobby_session_BASIC    top 5    topic LIKE '%奧數%' \ \ \ \ \ AND DATEADD(MINUTE, SessionStartMinute, DATEADD(HOUR, session_time, session_date)) > GETDATE() ORDER BY DATEADD(MINUTE, SessionStartMinute, DATEADD(HOUR, session_time, session_date))
+
+queryNotCancelSessions
+    [Documentation]    select client_sn,attend_date,attend_sestime from client_attend_list where valid =1 and attend_date >='2016-12-29 15:01:54.000' and client_sn in (select sn from client_basic \ where email like '%qatestapi%');
+    ...
+    ...    select client_sn,ClassStartDate from member.ClassRecord where classCostPoints <>0 and ClassStartDate >= '2016-12-29 15:01:54.000' and client_sn in (select sn from client_basic \ where email like '%qatestapi%');
+    ...
+    ...    select client_sn,sdate from ABCJR.dbo.customer_booking_record where valid =1 and sdate >='2016-12-29 15:01:54.000' and client_sn in (select sn from muchnewdb.dbo.client_basic \ where email like '%qatestapi%');
+    [Tags]
+    ${allClientSn}    queryCustom    select client_sn as sn \ from ABCJR.dbo.customer_prof with(nolock) where email \ LIKE'%qatestapi%' union select sn as sn from client_basic with(nolock) where email \ LIKE'%qatestapi%'
+    ${allClientSn_list}    Get Db Datas    all,0
+    ${allClientSn_tuple}    evaluate    tuple(${allClientSn_list})
+    ${StartTimeBegin}    get time
+    ${StartTimeEnd}    Add Time To Date    ${StartTimeBegin}    -1 days
+    ${reserveList_CAL}    queryDataSpecial    client_sn,convert(varchar,attend_date,120),attend_sestime,attend_livesession_types,special_sn    muchnewdb    client_attend_list    valid =1 and attend_date >='${StartTimeEnd}' and client_sn in ${allClientSn_tuple};
+    ${len1}    get length    ${reserveList_CAL}
+    ${reserveList_MCR}    queryDataSpecial    client_sn,convert(varchar,ClassStartDate,120),ClassStartTime,LobbySessionId    muchnewdb    member.ClassRecord    classCostPoints <>0 and ClassStartDate >= '${StartTimeEnd}' and client_sn in ${allClientSn_tuple};
+    ${len2}    get length    ${reserveList_MCR}
+    ${reserveList_CBR}    queryDataSpecial    client_sn,convert(varchar,sdate,120),stime,special_sn    ABCJR    ABCJR.dbo.customer_booking_record    valid =1 and sdate >='${StartTimeEnd}' and client_sn in ${allClientSn_tuple};
+    ${len3}    get length    ${reserveList_CBR}
+    #log    请检查\r\nCAL:${reserveList_CAL}\r\nMCR:${reserveList_MCR}\r\nCBR:${reserveList_CBR}
+    #should be true    ${len1}==0 and ${len2}==0 and ${len3}==0
+    log to console    CAL未取消课程数:${len1}\r\nMCR未取消课程数:${len2}\r\nCBR未取消课程数:${len3}\r\n
+    run keyword if     ${len1}!=0 or \ ${len2}!=0 or ${len3}!=0    log to console    请检查\r\nCAL:${reserveList_CAL}\r\nMCR:${reserveList_MCR}\r\nCBR:${reserveList_CBR}
+    [Return]    ${len1}    ${len2}    ${len3}    ${reserveList_CAL}    ${reserveList_MCR}    ${reserveList_CBR}

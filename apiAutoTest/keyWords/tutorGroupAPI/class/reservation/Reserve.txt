@@ -1,0 +1,445 @@
+*** Keywords ***
+reserve
+    [Arguments]    ${TutorBrand}=    ${ClientSn}=    ${LobbySn}=    ${Max}=    ${SstNumber}=    ${SessionTime}=
+    ...    ${StrategyId}=    ${PeriodMinutes}=
+    [Tags]    apitest    #开始订课    #${params}    Create Dictionary    TutorBrand=${TutorBrand}    ClientSn=${ClientSn}
+    ...    # LobbySn=${LobbySn}    Max=${Max}    SstNumber=${SstNumber}    # SessionTime=${SessionTime}
+    #${params_list}    Create List    ${params}
+    ${headers}    Create Dictionary    Content-Type=application/x-www-form-urlencoded    Referer=${HOST}/Center/Profile/Index?
+    ${uri}    Set Variable    /class/reservation/reserve
+    #${params_json}    Dumps    ${params_list}
+    #${params_String}    Create Dictionary    Token=${Token}    data=${params_json}
+    ${params_String}    Create Dictionary    Token=${Token}    data=[{TutorBrand:${TutorBrand},ClientSn:${ClientSn},LobbySn:"${LobbySn}",Max:"${Max}",SstNumber:"${SstNumber}",SessionTime:"${SessionTime}",StrategyId:["${StrategyId}"],PeriodMinutes:"${PeriodMinutes}"}]
+    ${resp}    Post Request    api    ${uri}    ${params_String}    headers=${headers}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+ReserveAdult45_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    1,3    45    2
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    ${ApiConsultantSn}    Set Variable    ${Result[0]['ConsultantSn']}
+    ${ApiMaterialSn}    Set Variable    ${Result[0]['MaterialSn']}
+    #根据教材编号获取讲堂信息
+    GetInfo    [${LobbySn}]
+    ${GetInfoSn}    get api response    Result,0,Sn
+    ${GetInfoStartTime}    get api response    Result,0,StartTime
+    ${GetInfoConsultantSn}    get api response    Result,0,ConsultantSn
+    ${GetInfoMaterialSn}    get api response    Result,0,MaterialSn
+    #校验订课返回的信息和上方Lobby接口返回的讲堂信息是否一致
+    should be true    ${ApiMax}==-1
+    should be equal as strings    ${ApiSstNumber}    99
+    should be equal as strings    ${GetInfoStartTime}    "${ApiSessionTime}"
+    should be equal as strings    ${LobbySn}    ${ApiLobbySn}
+    should be equal as strings    ${GetInfoConsultantSn}    ${ApiConsultantSn}
+    should be equal as strings    ${GetInfoMaterialSn}    ${ApiMaterialSn}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #检查数据库
+    ${returnData}    queryDataSpecial    cal.attend_livesession_types,cal.attend_consultant,cal.attend_mtl_1    muchnewdb    client_attend_list AS cal INNER JOIN ClientAttendListDetail AS cald ON cal.sn = cald.ParentSn    cal.client_sn = ${ClientSn} \ AND cal.attend_date = convert(datetime,'${attend_date}') \ AND cal.attend_sestime = ${attend_sestime} AND cal.special_sn = ${ApiLobbySn} AND cal.valid = 1 AND cald.SessionPeriod = 45 AND cald.Minutes = 30
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    99
+    should be equal as strings    ${returnData[0][1]}    ${GetInfoConsultantSn}
+    should be equal as strings    ${returnData[0][2]}    ${GetInfoMaterialSn}
+    #Cancel    ${params_list}
+    #assertEqualValueByJsonArray    Success    true
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+
+ReserveChiAdu45_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${ClassTypeId}    ${BrandId}    ${LobbyBrand}    ${SstNumber}
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    ${LobbyBrand}    45    2
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    ${ApiConsultantSn}    Set Variable    ${Result[0]['ConsultantSn']}
+    ${ApiMaterialSn}    Set Variable    ${Result[0]['MaterialSn']}
+    #根据教材编号获取讲堂信息
+    GetInfo    [${LobbySn}]
+    ${GetInfoSn}    get api response    Result,0,Sn
+    ${GetInfoStartTime}    get api response    Result,0,StartTime
+    ${GetInfoConsultantSn}    get api response    Result,0,ConsultantSn
+    ${GetInfoMaterialSn}    get api response    Result,0,MaterialSn
+    ${GetInfoJrMaterialSn}    get api response    Result,0,JrMaterialSn
+    ${GetInfoJrMaterialSn}    run keyword if    '${GetInfoJrMaterialSn}'=='null'    Set Variable    None
+    ...    ELSE    Evaluate    ${GetInfoJrMaterialSn}
+    ${MaterialSn}    run keyword if    ${TutorBrand}==4 or ${TutorBrand}==3    Set Variable    ${GetInfoJrMaterialSn}
+    ...    ELSE    Set Variable    ${GetInfoMaterialSn}
+    #校验订课返回的信息和上方Lobby接口返回的讲堂信息是否一致
+    should be true    ${ApiMax}==-1
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    should be equal as strings    ${GetInfoStartTime}    "${ApiSessionTime}"
+    should be equal as strings    ${LobbySn}    ${ApiLobbySn}
+    should be equal as strings    ${GetInfoConsultantSn}    ${ApiConsultantSn}
+    should be equal as strings    ${GetInfoMaterialSn}    ${ApiMaterialSn}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    #检查数据库
+    ${returnData}    queryDataSpecial    ClassTypeId,ClassConsultantId,ClassMaterialNumber,ClassStartMinutes,BrandId,ClassStatusId,ClassIntervalId    muchnewdb    member.ClassRecord    client_sn = ${ClientSn} \ AND ClassStartDate = \ convert(datetime,'${attend_date}') AND ClassStartTime = ${attend_sestime} AND LobbySessionId = ${LobbySn} AND ClassRecordValid = 1
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${ClassTypeId}
+    should be equal as strings    ${returnData[0][1]}    ${GetInfoConsultantSn}
+    should be equal as strings    ${returnData[0][2]}    ${MaterialSn}
+    should be equal as strings    ${returnData[0][3]}    ${attend_Minutes}
+    should be equal as strings    ${returnData[0][4]}    ${BrandId}
+    should be equal as strings    ${returnData[0][5]}    2
+    should be equal as strings    ${returnData[0][6]}    1
+    #Cancel    ${params_list}
+    #assertEqualValueByJsonArray    Success    true
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+
+ReserveSoon_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${PeriodMinutes}    ${ClassTypeId}    ${BrandId}    ${ClassIntervalId}
+    ...    ${SstNumber}    ${LobbyBrand}
+    #获取LobbySn
+    ${LobbySn}    GetLobbysn    ${LobbyBrand}    ${PeriodMinutes}    4    Sn    1
+    run keyword if    ${LobbySn}==0    Pass Execution    没有排课
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiLobbySn}    Set Variable    ${Result[0]['LobbySn']}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    ${ApiConsultantSn}    Set Variable    ${Result[0]['ConsultantSn']}
+    ${ApiMaterialSn}    Set Variable    ${Result[0]['MaterialSn']}
+    #根据教材编号获取讲堂信息
+    GetInfo    [${LobbySn}]
+    ${GetInfoSn}    get api response    Result,0,Sn
+    ${GetInfoStartTime}    get api response    Result,0,StartTime
+    ${GetInfoConsultantSn}    get api response    Result,0,ConsultantSn
+    ${GetInfoMaterialSn}    get api response    Result,0,MaterialSn
+    ${GetInfoJrMaterialSn}    get api response    Result,0,JrMaterialSn
+    ${MaterialSn}    run keyword if    ${TutorBrand}==4 or ${TutorBrand}==3    Set Variable    ${GetInfoJrMaterialSn}
+    ...    ELSE    Set Variable    ${GetInfoMaterialSn}
+    #校验订课返回的信息和上方Lobby接口返回的讲堂信息是否一致
+    should be true    ${ApiMax}==-1
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    should be equal as strings    ${GetInfoStartTime}    "${ApiSessionTime}"
+    should be equal as strings    ${LobbySn}    ${ApiLobbySn}
+    should be equal as strings    ${GetInfoConsultantSn}    ${ApiConsultantSn}
+    should be equal as strings    ${GetInfoMaterialSn}    ${ApiMaterialSn}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    ClassTypeId,ClassConsultantId,ClassMaterialNumber,ClassStartMinutes,BrandId,ClassStatusId,ClassIntervalId    muchnewdb    member.ClassRecord    client_sn = ${ClientSn} \ AND ClassStartDate = \ convert(datetime,'${attend_date}') AND ClassStartTime = ${attend_sestime} AND LobbySessionId = ${LobbySn} AND ClassRecordValid = 1
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${ClassTypeId}
+    should be equal as strings    ${returnData[0][1]}    ${GetInfoConsultantSn}
+    should be equal as strings    ${returnData[0][2]}    ${MaterialSn}
+    should be equal as strings    ${returnData[0][3]}    ${attend_Minutes}
+    should be equal as strings    ${returnData[0][4]}    ${BrandId}
+    should be equal as strings    ${returnData[0][5]}    2
+    should be equal as strings    ${returnData[0][6]}    ${ClassIntervalId}
+    [Teardown]    Cancel    ${TutorBrand}    ${ClientSn}    ${LobbySn}
+
+ReserveRegularByMax_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${PeriodMinutes}    ${SstNumber}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    ${Max}    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiSessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    #校验订课返回的信息
+    ${SessionFinishTime}    Add Time To Date    ${ApiSessionTime}    00:45:00
+    should be equal as strings    ${ApiSessionFinishTime}.000    ${SessionFinishTime}
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    attend_livesession_types,special_sn    muchnewdb    client_attend_list AS cal INNER JOIN ClientAttendListDetail AS cald ON cal.sn = cald.ParentSn    cal.client_sn = ${ClientSn} AND cal.attend_date = convert(datetime,'${attend_date}') AND cal.attend_sestime = ${attend_sestime} AND cal.valid = 1 AND cald.SessionPeriod = ${PeriodMinutes} AND cald.Minutes = ${attend_Minutes}
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${SstNumber}
+    should be equal as strings    ${returnData[0][1]}    None
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+ReserveRegularTjrByMax_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${PeriodMinutes}    ${SstNumber}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    ${Max}    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiSessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    #校验订课返回的信息
+    ${SessionFinishTime}    Add Time To Date    ${ApiSessionTime}    00:45:00
+    should be equal as strings    ${ApiSessionFinishTime}.000    ${SessionFinishTime}
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    stype,special_sn    ABCJR    customer_booking_record    client_sn = ${ClientSn} AND sdate = convert(datetime,'${attend_date}') AND stime = ${attend_sestime} AND StartMinutes = ${attend_Minutes} AND valid = 1
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${SstNumber}
+    should be equal as strings    ${returnData[0][1]}    None
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+ReserveRegularVjrAduByMax_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${PeriodMinutes}    ${SstNumber}    ${ClassTypeId}
+    ...    ${BrandId}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    ${Max}    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiSessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    #校验订课返回的信息
+    ${SessionFinishTime}    Add Time To Date    ${ApiSessionTime}    00:45:00
+    should be equal as strings    ${ApiSessionFinishTime}.000    ${SessionFinishTime}
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    ClassTypeId,BrandId,ClassIntervalId,LobbySessionId,ClassStatusId    muchnewdb    member.ClassRecord    client_sn = ${ClientSn} AND ClassStartDate = convert(datetime,'${attend_date}') AND ClassStartTime = ${attend_sestime} AND ClassStartMinutes = ${attend_Minutes}
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${ClassTypeId}
+    should be equal as strings    ${returnData[0][1]}    ${BrandId}
+    should be equal as strings    ${returnData[0][2]}    1
+    should be equal as strings    ${returnData[0][3]}    None
+    should be equal as strings    ${returnData[0][4]}    2
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+ReserveRegularBySstNumber_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${PeriodMinutes}    ${SstNumber}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    \    ${SstNumber}    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiSessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    #校验订课返回的信息
+    ${SessionFinishTime}    Add Time To Date    ${ApiSessionTime}    00:45:00
+    should be equal as strings    ${ApiSessionFinishTime}.000    ${SessionFinishTime}
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    attend_livesession_types,special_sn    muchnewdb    client_attend_list AS cal INNER JOIN ClientAttendListDetail AS cald ON cal.sn = cald.ParentSn    cal.client_sn = ${ClientSn} AND cal.attend_date = convert(datetime,'${attend_date}') AND cal.attend_sestime = ${attend_sestime} AND cal.valid = 1 AND cald.SessionPeriod = ${PeriodMinutes} AND cald.Minutes = ${attend_Minutes}
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${SstNumber}
+    should be equal as strings    ${returnData[0][1]}    None
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+ReserveRegularTjrBySstNumber_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${PeriodMinutes}    ${SstNumber}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    \    ${SstNumber}    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiSessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    #校验订课返回的信息
+    ${SessionFinishTime}    Add Time To Date    ${ApiSessionTime}    00:45:00
+    should be equal as strings    ${ApiSessionFinishTime}.000    ${SessionFinishTime}
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    stype,special_sn    ABCJR    customer_booking_record    client_sn = ${ClientSn} AND sdate = convert(datetime,'${attend_date}') AND stime = ${attend_sestime} AND StartMinutes = ${attend_Minutes} AND valid = 1
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${SstNumber}
+    should be equal as strings    ${returnData[0][1]}    None
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+ReserveRegularVjrAduBySstNumber_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${PeriodMinutes}    ${SstNumber}    ${ClassTypeId}
+    ...    ${BrandId}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    \    ${SstNumber}    ${SessionTime}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiSessionFinishTime}    Set Variable    ${Result[0]['SessionFinishTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiSstNumber}    Set Variable    ${Result[0]['SstNumber']}
+    #校验订课返回的信息
+    ${SessionFinishTime}    Add Time To Date    ${ApiSessionTime}    00:45:00
+    should be equal as strings    ${ApiSessionFinishTime}.000    ${SessionFinishTime}
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiSstNumber}    ${SstNumber}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    ${attend_Minutes}    Get Substring    ${ApiSessionTime}    14    16
+    ${attend_Minutes}    run keyword if    ${attend_Minutes}==00    Set Variable    0
+    ...    ELSE    Set Variable    ${attend_Minutes}
+    #检查数据库
+    ${returnData}    queryDataSpecial    ClassTypeId,BrandId,ClassIntervalId,LobbySessionId,ClassStatusId    muchnewdb    member.ClassRecord    client_sn = ${ClientSn} AND ClassStartDate = convert(datetime,'${attend_date}') AND ClassStartTime = ${attend_sestime} AND ClassStartMinutes = ${attend_Minutes}
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    should be equal as strings    ${returnData[0][0]}    ${ClassTypeId}
+    should be equal as strings    ${returnData[0][1]}    ${BrandId}
+    should be equal as strings    ${returnData[0][2]}    1
+    should be equal as strings    ${returnData[0][3]}    None
+    should be equal as strings    ${returnData[0][4]}    2
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+ReserveSpecial1on1_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}    ${StrategyId}
+    ${SessionTime}    TimeUtil    27
+    #开始订课
+    reserve    ${TutorBrand}    ${ClientSn}    \    ${Max}    \    ${SessionTime}
+    ...    ${StrategyId}
+    assertEqualValueByJsonArray    Success    true
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.01"
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Set Variable    ${api_rsponse[0]['Result']}    Result
+    log    ${Result}
+    ${ApiSessionTime}    Set Variable    ${Result[0]['SessionTime']}
+    ${ApiMax}    Set Variable    ${Result[0]['Max']}
+    ${ApiStrategyId}    Set Variable    ${Result[0]['StrategyId'][0]}
+    #校验订课返回的信息
+    should be true    ${ApiMax}==${Max}
+    should be equal as strings    ${ApiStrategyId}    ${StrategyId}
+    #should be true    ${ApiStrategyId}==${StrategyId}
+    #分割${ApiSessionTime}
+    ${attend_date}    Get Substring    ${ApiSessionTime}    0    10
+    ${attend_date}    Set Variable    ${attend_date} 00:00:00
+    ${attend_sestime}    Get Substring    ${ApiSessionTime}    11    13
+    #检查数据库
+    ${returnData}    queryDataSpecial    ClientSn    muchnewdb    Special1on1Session    ClientSn = ${ClientSn} AND SessionDate = convert(datetime,'${attend_date}') AND SessionTime = ${attend_sestime} AND Valid = 1
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${DbNums}==1
+    [Teardown]    CancelSuccess    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}
+
+reserve1on1ByGet
+    [Arguments]    ${TutorBrand}=    ${ClientSn}=    ${Max}=    ${SessionTime}=    ${StrategyId}=
+    [Documentation]    订课接口的Get方式(暂时未用到)
+    [Tags]    apitest
+    ${uri}    Set Variable    /class/reservation/reserve
+    ${params}    Set Variable    Token=${Token}&data=[{TutorBrand:${TutorBrand},ClientSn:${ClientSn},Max:${Max},SessionTime:"${SessionTime}",StrategyId:["${StrategyId}"]}]
+    ${resp}    get request    api    ${uri}    \    ${params}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+ReserveInValid_Template
+    [Arguments]    ${TutorBrand}=    ${ClientSn}=    ${Max}=    ${SstNumber}=    ${PeriodMinutes}=
+    ${SessionTime}    TimeUtil    48
+    #预订vipabc_年约_预定1对5
+    reserve    ${TutorBrand}    ${ClientSn}    \    ${Max}    ${SstNumber}    ${SessionTime}
+    ...    \    ${PeriodMinutes}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.205.01"
+
+ReserveOverTime_Template
+    [Arguments]    ${TutorBrand}    ${ClientSn}    ${Max}
+    ${SessionTime}    timeUtil    2
+    reserve    ${TutorBrand}    ${ClientSn}    \    ${Max}    \    ${SessionTime}
+    assertEqualValueByJsonArray    Success    false
+    assertEqualValueByJsonArray    ReturnCode    "API.1.20.50.100.206.01"
+    [Teardown]    Cancel    ${TutorBrand}    ${ClientSn}    \    ${SessionTime}

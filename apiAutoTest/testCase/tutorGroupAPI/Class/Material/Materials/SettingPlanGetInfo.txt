@@ -1,0 +1,11 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/SettingPlanGetInfo.txt
+Resource          ../../../../../framework/init.txt
+
+*** Test Cases ***
+GetMaterialsInfo
+    [Tags]    debug    stop
+    ${r1}    MaterialInfo    1    239699    1087
+    assertJson    ${r1}

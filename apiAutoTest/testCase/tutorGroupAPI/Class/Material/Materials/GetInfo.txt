@@ -1,0 +1,25 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/GetInfo.txt
+Resource          ../../../../../framework/init.txt
+Resource          ../../../../../keyWords/tutorGroupAPI/class/Material/Materials.txt
+
+*** Test Cases ***
+Class_Material_Data_Profile_GetInfo_01_1_001
+    [Documentation]    传入指定1组大人的教材编号,校验教材平均分
+    [Tags]    high
+    log    传入指定1组大人的教材编号
+    ${TutorBrand}    Set Variable    vipabc
+    ${MaterialSn}    getMaterial    ${TutorBrand}    0    #获取教材编号
+    GetInfo    ${TutorBrand}    ${MaterialSn}
+    #获取接口返回值
+    ${Success}    JsonUtil    Success
+    ${num}    JsonLength    Result    4
+    Should be true    ${num}==1
+    assertsOperation    ${Success}    =    true
+    ${ReturnMaterialSn}    JsonUtil    Result    MaterialSn
+    #验证接口返回值是否等于预期
+    assertsOperation    ${ReturnMaterialSn}    =    ${MaterialSn}
+    #验证返回教材是否来自V大
+    queryMaterialScore    ClientRatingStats    0

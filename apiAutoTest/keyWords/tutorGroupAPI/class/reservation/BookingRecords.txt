@@ -1,0 +1,21 @@
+*** Keywords ***
+BookingRecordsDay
+    [Arguments]    ${TutorBrand}    ${searchDay}    ${ClassStatus}    ${ClientSn}
+    [Documentation]    后续可用于每天一课的验证
+    ${uri}    Set Variable    /class/Reservation/BookingRecords
+    ${t1}    Get SubString    ${searchDay}    0    10
+    ${StartTimeBegin}    Set Variable    ${t1} 00:00:00
+    ${StartTimeEnd}    Set Variable    ${t1} 23:59:59
+    ${params}    Create Dictionary    TutorBrand=${TutorBrand}    ClientSn=${ClientSn}    ClassStatus=${ClassStatus}    StartTimeBegin=${StartTimeBegin}    StartTimeEnd=${StartTimeEnd}
+    ${params_json}    Dumps    ${params}
+    ${params}    Set Variable    Token=${Token}&Query=${params_json}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${content}    Set Variable    ${resp.content}
+    assertContainValues    ${content}    true
+    ${content_string}    Convert to string    ${content}
+    ${contentRex}    Get Regexp Matches    ${content_string}    \"Sn\"\:(\\d+),    1
+    ${len}    Get Length    ${contentRex}
+    ${returnData}    run keyword if     ${len}>0    Set Variable    False
+    ...    ELSE    Set Variable    True
+    [Return]    ${returnData}

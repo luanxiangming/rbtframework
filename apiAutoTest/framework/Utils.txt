@@ -1,0 +1,128 @@
+*** Settings ***
+Library           DatabaseLibrary
+Library           RequestsLibrary
+Library           Collections
+Library           json
+Library           CustomLibrary
+
+*** Keywords ***
+Decode
+    [Arguments]    ${content}
+    #${content_String}    Convert To String    ${content}
+    ${returnData}    Evaluate    '${content}'.decode('utf-8')
+    [Return]    ${returnData}
+
+ConMsSql
+    [Arguments]    ${DataBase}=muchnewdb
+    [Documentation]    "DRIVER={SQL Server};SERVER=dev1.tutorabc.com;DATABASE=muchnewdb;UID=imsplusacct;PWD=9o4k2W(8)olC"
+    ...
+    ...    ${DB_host} | ${dataBase} | ${DB_username} | ${DB_password}
+    #Connect To Database Using Custom Params    pyodbc    "DRIVER={SQL Server};SERVER=${DB_host};DATABASE=${dataBase};UID=${DB_username};PWD=${DB_password}"
+    run keyword if    'stageapi' in '${ENVIRONMENT}'    Connect To Database Using Custom Params    pyodbc    "DRIVER={SQL Server};SERVER=DBStage1.tutorabc.com;DATABASE=${DataBase};Integrated Security=True"
+    ...    ELSE    Connect To Database Using Custom Params    pyodbc    "DRIVER={SQL Server};SERVER=dev1.tutorabc.com;DATABASE=${DataBase};UID=imsplusacct;PWD=9o4k2W(8)olC"
+
+TimeUtil
+    [Arguments]    ${AddTime}
+    [Documentation]    获取订课时间(普通小班课专用)
+    ${AddTime2}    Evaluate    ${AddTime}+1
+    ${nowTime}    get time
+    ${t1}    Convert Date    ${nowTime}    datetime
+    ${t2}    Set Variable    ${t1.minute}
+    ${t3}    run keyword if    ${t2}<=30    Add Time To Date    ${nowTime}    ${AddTime}:00:00
+    ...    ELSE IF    ${t2}>30    Add Time To Date    ${nowTime}    ${AddTime2}:00:00
+    ${t4}    Get SubString    ${t3}    0    13
+    ${returnValue}    Set Variable    ${t4}:30:00
+    [Return]    ${returnValue}
+
+TimeLdUtil
+    [Arguments]    ${AddTime}
+    [Documentation]    获取订课时间(小班课立马上专用)
+    ${nowTime}    get time
+    ${nowTime2}    Convert Date    ${nowTime}    datetime
+    ${minOne}    Set Variable    ${nowTime2.minute}
+    ${t1}    run keyword if    ${minOne}<=30    Evaluate    30-${minOne}
+    ${nowTime3}    run keyword if    ${minOne}>30    Add Time To Date    ${nowTime}    01:00:00
+    ...    ELSE IF    ${t1}<${AddTime}    Add Time To Date    ${nowTime2}    01:00:00
+    ...    ELSE    Set Variable    ${nowTime2}
+    ${nowTime4}    Convert to string    ${nowTime3}
+    ${ymh}    Get SubString    ${nowTime4}    0    13
+    ${returnValue}    Set Variable    ${ymh}:30:00
+    [Return]    ${returnValue}
+
+JsonUtil
+    [Arguments]    ${arg}=    ${arg_Nested}=    ${index}=0
+    ${api_rsponse}    get api response
+    ${r1}    to json    ${api_rsponse}
+    ${IsArray}    Evaluate    isinstance(${r1},list)
+    ${r2}    Run keyword if    '${IsArray}'=='True'    set variable    ${r1[0]['${arg}']}
+    ...    ELSE    set variable    ${r1['${arg}']}
+    ${IsArray1}    Evaluate    isinstance(${r2},list)
+    ${returnData}    Run keyword if    '${arg_Nested}'=='${EMPTY}'    set variable    ${r2}
+    ...    ELSE IF    '${arg_Nested}'!='${EMPTY}' and '${IsArray1}'=='True'    set variable    ${r2[${index}]['${arg_Nested}']}
+    ...    ELSE IF    '${arg_Nested}'!='${EMPTY}' and '${IsArray1}'=='False'    set variable    ${r2['${arg_Nested}']}
+    ${returnData}    dumps    ${returnData}
+    [Return]    ${returnData}
+
+debug
+    [Arguments]    @{list}
+    log    test12
+    [Return]    ${r2}
+
+JsonLength
+    [Arguments]    ${arg}=    ${arg_Nested}=
+    ${api_rsponse}    get api response
+    ${r1}    to json    ${api_rsponse}
+    ${IsArray}    Evaluate    isinstance(${r1},list)
+    ${r2}    Run keyword if    '${IsArray}'=='True'    Get Length    ${r1}
+    ${IsArray1}    Evaluate    isinstance(${r1['${arg}']},list)
+    ${returnData}    Run keyword if    '${arg_Nested}'=='${EMPTY}'    set variable    ${r2}
+    ...    ELSE    Get Length    ${r1['${arg}']}    #ELSE IF    '${arg_Nested}'!='${EMPTY}' and '${IsArray1}'=='False'    set variable
+    ...    # ${r2['${arg_Nested}']}
+    [Return]    ${returnData}
+
+JsonUtilTwo
+    [Arguments]    ${arg}=    ${arg_Nested}=    ${index}=0
+    ${api_rsponse}    get api response
+    #${content}    Replace String    ${api_rsponse.content}    \r\n    ${EMPTY}
+    ${r1}    to json    ${api_rsponse}
+    log    ${r1}
+    ${IsArray}    Evaluate    isinstance(${r1},list)
+    ${r2}    Run keyword if    '${IsArray}'=='True'    set variable    ${r1[0]['${arg}']}
+    ...    ELSE    set variable    ${r1['${arg}']}
+    ${IsArray1}    Evaluate    isinstance(${r2},list)
+    ${returnData}    Run keyword if    '${arg_Nested}'=='${EMPTY}'    set variable    ${r2}
+    ...    ELSE IF    '${arg_Nested}'!='${EMPTY}' and '${IsArray1}'=='True'    set variable    ${r2[${index}]['${arg_Nested}']}
+    ...    ELSE IF    '${arg_Nested}'!='${EMPTY}' and '${IsArray1}'=='False'    set variable    ${r2['${arg_Nested}']}
+    [Return]    ${returnData}
+
+RunAssertData
+    [Arguments]    ${kw}    @{arg1}
+    log    KEYWORDNAME:RunAssertData
+    log    STARTCHECKDB::
+    #run keyword if    ${SERVER}    ${kw}
+    run keyword if    ${SERVER}    ${kw}    @{arg1}
+
+GetJsonData
+    [Arguments]    ${path}=None
+    [Documentation]    path:
+    ...    0,1
+    ...    0,0
+    ...    all,0
+    ...    0,all
+    ...    all,all
+    log    KEYWORDNAME:GetJsonData
+    ${GetJsonData}    Run keyword if    '${path}'=='None'    get api response
+    ...    ELSE    get api response    ${path}    #${GetJsonData}    Remove Json Sign    ${GetJsonData}
+    ...    #${api_rsponse}    To Json    ${api_rsponse}    #${GetJsonData}    # Run Keyword If    '${path}'=='None'
+    ...    # set variable    ${api_rsponse}    # ELSE    set variable    # ${api_rsponse${path}}
+    #log    11111111:${GetJsonData}
+    #${GetJsonData}    dumps    ${GetJsonData}
+    [Return]    ${GetJsonData}
+
+GetDbData
+    [Arguments]    ${path}=None    ${count}=None
+    log    KEYWORDNAME:GetDBData
+    ${db_data}    get database data
+    ${GetDBData}    Run Keyword If    '${path}'=='None'    set variable    ${db_data}
+    ...    ELSE    set variable    ${db_data${path}}
+    [Return]    ${GetDBData}

@@ -1,0 +1,93 @@
+*** Variables ***
+
+*** Keywords ***
+tg_Login
+    [Arguments]    ${TutorBrand}    ${Email}    ${Password}    ${HashedEmail}=    ${HashedPassword}=    ${HashedClientSn}=
+    ...    ${IsFromIms}=false    ${IpAddress}=
+    [Documentation]    默认IsfromIms=False
+    [Tags]    apitest
+    ${uri}    Set Variable    /Customer/Login
+    ${params}    Set Variable    Token=${token}&Query={ "TutorBrand":"${TutorBrand}", "Email":"${Email}", "Password":"${Password}","HashedEmail":"${HashedEmail}","HashedPassword":"${HashedPassword}","HashedClientSn":"${HashedClientSn}", "IsFromIms":${IsFromIms},"IpAddress":"${IpAddress}" }
+    ${resp}    get request    api    ${uri}    \    ${params}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+tg_Login_Simple
+    [Arguments]    ${TutorBrand}    ${Email}    ${Password}    ${IpAddress}=    ${IsFromIms}=false
+    [Tags]    apitest
+    ${uri}    Set Variable    /Customer/Login
+    ${param}    Set Variable    Token=${token}&Query={ "TutorBrand":"${TutorBrand}", "Email":"${Email}", "Password":"${Password}", "IsFromIms":${IsFromIms},"IpAddress":"${IpAddress}" }
+    ${resp}    get request    api    ${uri}    \    ${param}
+    ${returnData}    decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+tg_Ligin_Template
+    [Arguments]    ${TutorBrand}    ${Email}    ${Password}    ${IpAddress}    ${client_Sn}    ${operation}
+    ...    ${r_salt}
+    tg_Login_Simple    ${TutorBrand}    ${Email}    ${Password}    ${IpAddress}
+    assertEqualValueByJson    Success    true
+    assertApiResponse    Result,ClientSn    =    ${client_Sn}
+    assertApiResponse    Result,TutorBrand    =    ${TutorBrand}
+    assertApiResponse    Result,Salt    ${operation}    ${r_salt}
+    log    STARTCHECKDB::
+    queryPasswordInput    ${client_Sn}
+    RunAssertData    assertDbData    0,0    =    xFGdlQQJzMkUgAyNHdxQ
+    RunAssertData    assertDbData    0,1    =    ${IpAddress}
+
+tg_Profiles
+    [Arguments]    ${token}    ${TutorBrand}    ${ClientSn}
+    ${uri}    Set Variable    /Customer/CustomerProfiles
+    ${resp}    get request    api    ${uri}    \    Token=${token}&Query={TutorBrand:"${TutorBrand}",ClientSN:${ClientSn}}
+    ${returnData}    Set Variable    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+tg_Profiles_Simple
+    [Arguments]    ${TutorBrand}    ${ClientSn}
+    ${uri}    Set Variable    /Customer/CustomerProfiles
+    ${resp}    get request    api    ${uri}    \    Token=${Token}&Query={TutorBrand:"${TutorBrand}",ClientSN:${ClientSn}}
+    ${returnData}    Set Variable    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+tg_Profiles_CustomParam
+    [Arguments]    ${token}=    ${Query}=
+    ${uri}    Set Variable    /Customer/CustomerProfiles
+    ${resp}    get request    api    ${uri}    \    Token=${token}&Query=${Query}
+    ${returnData}    decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+tg_Test
+    [Arguments]    ${TutorBrand}    ${ClientSn}
+    ${uri}    Set Variable    /Customer/CustomerTest
+    ${params}    Set Variable    Token=${token}&Query={TutorBrand:"${TutorBrand}",ClientSN:${ClientSn}}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+debug
+    [Documentation]    默认IsfromIms=False
+    [Tags]    apitest
+    ${uri}    Set Variable    /class/lobby/Lobbysessions
+    ${params}    Set Variable    Token=e55kjx7QIpU%3d&Query={LobbyBrand:"ALL",%20StartTimeBegin:"2016/11/22%2022:00:00",%20StartTimeEnd:"2016/11/22%2023:59:59"}
+    ${resp}    get request    api    ${uri}    \    ${params}
+    log    LOGINFO:CONTENT:${resp.content}
+    ${returnData}    Decode    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+    [Return]    ${returnData}
+
+debugVariable
+    [Documentation]    默认IsfromIms=False
+    [Tags]    apitest
+    log    ${APIRESPONSE}
+
+Profiles_Get_Simple
+    [Arguments]    ${ClientSn}
+    ${uri}    Set Variable    /Customer/Data/Profile/Get
+    ${resp}    get request    api    ${uri}    \    Token=${Token2}&Query={"ClientSn":[${ClientSn}]}
+    ${returnData}    Set Variable    ${resp.content}
+    Should Be Equal As Strings    ${resp.status_code}    200
+
+getProfileInfo
+    [Arguments]    ${sn}
+    ${r1}    Profiles_Get_Simple    ${sn}
+    ${r2}    GetJsonData    Result,0,TutorBrand
+    [Return]    ${r2}

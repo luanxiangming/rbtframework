@@ -1,0 +1,108 @@
+*** Settings ***
+Suite Setup       Setup
+Force Tags        tg    product
+Resource          ../../../../keyWords/tutorGroupAPI/class/Lobby/Get.txt
+Resource          ../../../../framework/init.txt
+
+*** Test Cases ***
+Class_Lobby_Data_Profile_Get_01_1_001
+    [Documentation]    以LobbyBrand查询从现在时段到固定时间内的讲堂课程(大人，共同)
+    [Tags]
+    [Template]    GetByLobbyBrand_Template
+    #LobbyBrand    Days    PeriodMinutes
+    #查询大人时间段内的大讲堂，随选快课
+    1    3    45
+    1    14    10
+    1    7    20
+    #查询大人，小孩时间段内的共同课程（大讲堂，随选快课）
+    3    1    45
+    3    14    10
+    3    7    20
+
+Class_Lobby_Data_Profile_Get_01_1_002
+    [Documentation]    以LobbyBrand查询从现在时段到固定时间内的讲堂课程（小孩）
+    [Tags]
+    log    以LobbyBrand查询从现在时段到固定时间内的讲堂课程（小孩）
+    ${StartTimeBegin}    get time
+    ${StartTimeBegin}    Add Time To Date    ${StartTimeBegin}    -800 days
+    ${StartTimeEnd}    get time
+    ${LobbyBrand}    Set Variable    2
+    ${SessionPeriod}    Set Variable    45
+    Get    [${LobbyBrand}]    [${SessionPeriod}]    ${StartTimeBegin}    ${StartTimeEnd}
+    assertEqualValueByJson    Success    true
+    assertApiResponses    Result,all,LobbyBrand    =    2
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Get From Dictionary    ${api_rsponse}    Result
+    ${ApiNums}    Get Length    ${Result}
+    ${ApiSn_list}    get api response    Result,all,Sn
+    ${ApiLevel_list}    get api response    Result,all,Level
+    ${ApiLobbyBrand_list}    get api response    Result,all,LobbyBrand
+    #检查数据库
+    ${returnData}    queryDataSpecial    sn,BrandType    muchnewdb    lobby_session    valid=1 and BrandType IN (${LobbyBrand}) and DATEADD(MINUTE, SessionStartMinute, DATEADD(HOUR, session_time, session_date)) >=convert(datetime,'${StartTimeBegin}') and DATEADD(MINUTE, SessionStartMinute, DATEADD(HOUR, session_time, session_date)) <=convert(datetime,'${StartTimeEnd}') and SessionPeriod IN (${SessionPeriod}) order by sn asc
+    ${DbSn_list}    Get Db Datas    all,0
+    ${DbBrandType_list}    Get Db Datas    all,1
+    should be true    ${ApiSn_list}==${DbSn_list}
+    should be true    ${ApiLobbyBrand_list}==${DbBrandType_list}
+    ${DbNums}    Get Length    ${returnData}
+    should be true    ${ApiNums}==${DbNums}
+    : FOR    ${i}    IN RANGE    ${ApiNums}
+    \    ${ApiSn}    Set Variable    ${Result[${i}]['Sn']}
+    \    ${ApiLevel}    Set Variable    ${Result[${i}]['Level']}
+    \    ${ApiStartTime}    Set Variable    ${Result[${i}]['StartTime']}
+    \    ${ApiFinishTime}    Set Variable    ${Result[${i}]['FinishTime']}
+    \    ${StartTimeEnd}    Add Time To Date    ${ApiStartTime}    00:${SessionPeriod}:00
+    \    should be true    '${ApiFinishTime}.000'=='${StartTimeEnd}'
+    \    ${TopicZhTw}    Set Variable    ${Result[${i}]['Topic']['ZhTw']}
+    \    ${TopicEnUs}    Set Variable    ${Result[${i}]['Topic']['EnUs']}
+    \    ${TopicZhCn}    Set Variable    ${Result[${i}]['Topic']['ZhCn']}
+    \    ${TopicJa}    Set Variable    ${Result[${i}]['Topic']['Ja']}
+    \    queryDataSpecial    topic,topic_cn,topic_jp,lev    muchnewdb    lobby_session    Sn=${ApiSn} AND \ DATEADD(MINUTE, SessionStartMinute, DATEADD(HOUR, session_time, session_date))=convert(datetime,'${ApiStartTime}')
+    \    ${DbLev_list}    Get Db Datas    0,3
+    \    ${Dbtopic_list}    Get Db Datas    0,0    <br>
+    \    ${Dbtopic}    strip String    ${Dbtopic_list[0]}
+    \    ${DbtopicEnUs_list}    Get Db Datas    0,0    <br>    1
+    \    ${DbtopicEnUs}    strip String    ${DbtopicEnUs_list[0]}
+    \    ${topic_cnList}    Get Db Datas    0,1    <br>
+    \    ${Dbtopic_cn}    strip String    ${topic_cnList[0]}
+    \    ${topic_jpList}    Get Db Datas    0,2    <br>
+    \    ${Dbtopic_jp}    strip String    ${topic_jpList[0]}
+    \    should be equal as strings    ${TopicZhTw}    ${Dbtopic}
+    \    should be equal as strings    ${TopicEnUs}    ${DbtopicEnUs}
+    \    should be equal as strings    ${TopicZhCn}    ${Dbtopic_cn}
+    \    should be equal as strings    ${TopicJa}    ${Dbtopic_jp}
+    \    ${DbLev}    Remove Data Sign    ${DbLev_list[0]}    ,
+    \    should be true    ${ApiLevel}==${DbLev}
+
+Class_Lobby_Data_Profile_Get_01_1_003
+    [Documentation]    以TutorBrand查询从现在时段到固定时间内的讲堂课程
+    [Tags]
+    [Template]    GetByTutorBrand_Template
+    #PeriodMinutes    TutorBrand    Days
+    #查询大人时间段内的大讲堂，随选快课
+    45    vipabc    1
+    10    vipabc    3
+    20    vipabc    7
+    #查询小孩时间段内的大讲堂，随选快课
+    45    vipabcjr    1
+    10    vipabcjr    14
+    20    vipabcjr    3
+
+Class_Lobby_Data_Profile_Get_02_1_001
+    [Documentation]    传入指定3组講堂编号，2組存在，1組不存在
+    [Tags]
+    log    传入指定3组講堂编号，2組存在，1組不存在
+    ${SnOne}    Set Variable    95823
+    ${SnTwo}    Set Variable    95865
+    ${SnThree}    Set Variable    2000000
+    GetSn    [${SnOne},${SnTwo},${SnThree}]
+    assertEqualValueByJson    Success    true
+    ${api_rsponse}    get api response
+    ${api_rsponse}    To Json    ${api_rsponse}
+    ${Result}    Get From Dictionary    ${api_rsponse}    Result
+    ${nums}    Get Length    ${Result}
+    should be true    ${nums}==2
+    @{ApiSn_list}    get api response    Result,all,Sn
+    should be true    ${SnOne} in @{ApiSn_list}
+    should be true    ${SnTwo} in @{ApiSn_list}
+    should Not be true    ${SnThree} in @{ApiSn_list}
